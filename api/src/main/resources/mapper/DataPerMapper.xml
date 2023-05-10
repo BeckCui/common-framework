@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dhl.fin.api.dao.finDataPerDao">
+  <resultMap id="BaseResultMap" type="com.dhl.fin.api.domain.DataPer">
+    <id column="data_per_id" property="id" />
+    <result column="data_per_name" property="name" />
+    <result column="data_per_code" property="code" />
+    <result column="data_per_remove" property="remove" />
+    <result column="data_per_create_time" property="createTime" />
+    <result column="data_per_update_time" property="updateTime" />
+    <result column="data_per_create_user" property="createUser" />
+    <result column="data_per_update_user" property="updateUser" />
+    <association javaType="com.dhl.fin.api.domain.Tree" property="tree">
+      <id column="data_per_tree_id" property="id" />
+      <result column="tree_title" property="title" />
+      <result column="tree_code" property="code" />
+      <result column="tree_order_num" property="orderNum" />
+      <result column="tree_leaf" property="leaf" />
+      <result column="tree_parent_line" property="parentLine" />
+      <result column="tree_remove" property="remove" />
+      <result column="tree_create_time" property="createTime" />
+      <result column="tree_update_time" property="updateTime" />
+      <result column="tree_create_user" property="createUser" />
+      <result column="tree_update_user" property="updateUser" />
+    </association>
+  </resultMap>
+  <sql id="Base_Column_List">
+    data_per.id as data_per_id,data_per.create_time as data_per_create_time,data_per.create_user as data_per_create_user,data_per.remove as data_per_remove,data_per.update_time as data_per_update_time,data_per.update_user as data_per_update_user,data_per.code as data_per_code,data_per.name as data_per_name,data_per.tree_id as data_per_tree_id
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="domain.tableAlia == 'tree'">
+          ,tree.title as tree_title,tree.code as tree_code,tree.order_num as tree_order_num,tree.leaf as tree_leaf,tree.parent_line as tree_parent_line,tree.id as tree_id,tree.remove as tree_remove,tree.create_time as tree_create_time,tree.update_time as tree_update_time,tree.create_user as tree_create_user,tree.update_user as tree_update_user
+        </if>
+      </foreach>
+    </if>
+  </sql>
+  <sql id="select_sql">
+    select  <if test='selectOne'>top 1</if>
+    <include refid="Base_Column_List" />
+    from t_data_per data_per
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on data_per.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on data_per.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on data_per.id=${domain.middleTable}_alis.data_per_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where 1=1 
+    <if test="whereCondition != null">
+      <foreach collection="whereCondition" index="index" item="condition">
+        and ${condition}
+      </foreach>
+    </if>
+    <if test="orderCondition != null">
+      <trim prefix="order by" suffixOverrides=",">
+        <foreach collection="orderCondition" index="index" item="condition">
+           ${condition},
+        </foreach>
+      </trim>
+    </if>
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap">
+    select  <if test='selectOne'>top 1</if>
+    <include refid="Base_Column_List" />
+    from t_data_per data_per
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on data_per.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on data_per.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on data_per.id=${domain.middleTable}_alis.data_per_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where data_per.id = #{id,jdbcType=BIGINT}
+  </select>
+  <select id="selectPageQuery" resultMap="BaseResultMap">
+    with dd as (select distinct ${orderFields} from t_data_per data_per 
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on data_per.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on data_per.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on data_per.id=${domain.middleTable}_alis.data_per_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where 1 = 1 
+    <if test="whereCondition != null">
+      <foreach collection="whereCondition" index="index" item="condition">
+        and ${condition}
+      </foreach>
+    </if>
+    <if test="orderCondition != null">
+      <trim prefix="order by" suffixOverrides=",">
+        <foreach collection="orderCondition" index="index" item="condition">
+           ${condition},
+        </foreach>
+      </trim>
+    </if>
+    offset ${startIndex} rows fetch next ${length} rows only)
+    select <include refid="Base_Column_List" />
+    from t_data_per data_per
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on data_per.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on data_per.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on data_per.id=${domain.middleTable}_alis.data_per_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where exists(select 1 from dd where dd.id = data_per.id)
+    <if test="orderCondition != null">
+      <trim prefix="order by" suffixOverrides=",">
+        <foreach collection="orderCondition" index="index" item="condition">
+           ${condition},
+        </foreach>
+      </trim>
+    </if>
+  </select>
+  <select id="selectSelective" resultMap="BaseResultMap">
+    <include refid="select_sql" />
+  </select>
+  <select id="selectCount" resultType="java.lang.Integer">
+    select count(1) total from (
+    select  <if test='selectOne'>top 1</if>
+     distinct ${fields}
+    from t_data_per data_per
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on data_per.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on data_per.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on data_per.id=${domain.middleTable}_alis.data_per_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where 1=1 
+    <if test="whereCondition != null">
+      <foreach collection="whereCondition" index="index" item="condition">
+        and ${condition}
+      </foreach>
+    </if>
+    <if test="orderCondition != null">
+      <trim prefix="order by" suffixOverrides=",">
+        <foreach collection="orderCondition" index="index" item="condition">
+           ${condition},
+        </foreach>
+      </trim>
+    </if>
+    ) as s
+  </select>
+  <update id="deleteByPrimaryKey">
+      update t_data_per set remove = 1 , update_time=#{updateTime} , update_user=#{updateUser} where id = #{id,jdbcType=BIGINT}
+  </update>
+  <insert id="insert" parameterType="com.dhl.fin.api.domain.DataPer">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Long">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into t_data_per (create_time, create_user, remove, 
+      update_time, update_user, code, 
+      name, tree_id)
+    values (#{createTime,jdbcType=TIMESTAMP}, #{createUser,jdbcType=VARCHAR}, #{remove,jdbcType=BIT}, 
+      #{updateTime,jdbcType=TIMESTAMP}, #{updateUser,jdbcType=VARCHAR}, #{code,jdbcType=VARCHAR}, 
+    #{name,jdbcType=VARCHAR},#{tree.id,jdbcType=BIGINT})
+  </insert>
+  <insert id="insertSelective" parameterType="com.dhl.fin.api.domain.DataPer">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Long">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into t_data_per
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="createTime != null">
+        create_time,
+      </if>
+      <if test="createUser != null">
+        create_user,
+      </if>
+      <if test="remove != null">
+        remove,
+      </if>
+      <if test="updateTime != null">
+        update_time,
+      </if>
+      <if test="updateUser != null">
+        update_user,
+      </if>
+      <if test="code != null">
+        code,
+      </if>
+      <if test="name != null">
+        name,
+      </if>
+      <if test="tree != null and tree.id != null">
+        tree_id,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createUser != null">
+        #{createUser,jdbcType=VARCHAR},
+      </if>
+      <if test="remove != null">
+        #{remove,jdbcType=BIT},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateUser != null">
+        #{updateUser,jdbcType=VARCHAR},
+      </if>
+      <if test="code != null">
+        #{code,jdbcType=VARCHAR},
+      </if>
+      <if test="name != null">
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="tree != null and tree.id != null">
+        #{tree.id,jdbcType=BIGINT},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective">
+    update t_data_per
+    <set>
+      <if test="domain.createTime != null ">
+        create_time = #{domain.createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="domain.createUser != null ">
+        create_user = #{domain.createUser,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.remove != null ">
+        remove = #{domain.remove,jdbcType=BIT},
+      </if>
+      <if test="domain.updateTime != null ">
+        update_time = #{domain.updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="domain.updateUser != null ">
+        update_user = #{domain.updateUser,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.code != null ">
+        code = #{domain.code,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.name != null ">
+        name = #{domain.name,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.tree != null  and domain.tree.id != null ">
+        tree_id = #{domain.tree.id,jdbcType=BIGINT},
+      </if>
+    </set>
+    <trim prefix="where" suffixOverrides="and">
+      <foreach collection="query.whereCondition" item="condition">
+         ${condition}
+      </foreach>
+    </trim>
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.dhl.fin.api.domain.DataPer">
+    update t_data_per
+    set create_time = #{createTime,jdbcType=TIMESTAMP},
+      create_user = #{createUser,jdbcType=VARCHAR},
+      remove = #{remove,jdbcType=BIT},
+      update_time = #{updateTime,jdbcType=TIMESTAMP},
+      update_user = #{updateUser,jdbcType=VARCHAR},
+      code = #{code,jdbcType=VARCHAR},
+      name = #{name,jdbcType=VARCHAR},
+      tree_id = #{tree.id,jdbcType=BIGINT}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <select id="selectOne" resultMap="BaseResultMap">
+    <include refid="select_sql"/>
+  </select>
+</mapper>

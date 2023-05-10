@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="60">
+    <!--logback文件起名为logback-spring.yml + springProperty可以保证读取到application.yml文件配置-->
+    <springProperty name="LOG_PATH" source="logback.dir" defaultValue="logs" scope="context"/>
+    <springProperty name="ifOpenConsole" source="logback.isOpenConsole" defaultValue="true" scope="context"/>
+    <springProperty name="logback.level" source="logback.level" defaultValue="INFO" scope="context"/>
+    <springProperty name="logback.maxFileSize" source="logback.maxfilesize" defaultValue="100MB" scope="context"/>
+    <springProperty name="logback.maxHistory" source="logback.maxhistory" defaultValue="90" scope="context"/>
+    <springProperty name="logback.filename.all" source="logback.filename.all" defaultValue="all" scope="context"/>
+    <springProperty name="logback.filename.info" source="logback.filename.info" defaultValue="info" scope="context"/>
+    <springProperty name="logback.filename.error" source="logback.filename.error" defaultValue="error" scope="context"/>
+
+    <!-- 控制台输出 -->
+    <!-- 一定要添加org.codehaus.janino依赖包，否则会出错-->
+    <if condition='p("ifOpenConsole").contains("true")'>
+        <then>
+            <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+                <encoder>
+                    <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>
+                </encoder>
+            </appender>
+        </then>
+    </if>
+
+    <!-- 按照每天生成日志文件 -->
+    <appender name="ALL_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/${logback.filename.all}.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!-- rollover daily -->
+            <fileNamePattern>${LOG_PATH}/${logback.filename.all}.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxFileSize>${logback.maxFileSize}</maxFileSize>
+            <maxHistory>${logback.maxHistory}</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- 按照每天生成日志文件 -->
+    <appender name="INFO_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+        <file>${LOG_PATH}/${logback.filename.info}.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!-- rollover daily -->
+            <fileNamePattern>${LOG_PATH}/${logback.filename.info}.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxFileSize>${logback.maxFileSize}</maxFileSize>
+            <maxHistory>${logback.maxHistory}</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- 按照每天生成日志文件 -->
+    <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+        <file>${LOG_PATH}/${logback.filename.error}.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!-- rollover daily -->
+            <fileNamePattern>${LOG_PATH}/${logback.filename.error}.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxFileSize>${logback.maxFileSize}</maxFileSize>
+            <maxHistory>${logback.maxHistory}</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+
+    <!-- 日志输出级别 -->
+    <root level="${logback.level}">
+        <if condition='p("ifOpenConsole").contains("true")'>
+            <then>
+                <appender-ref ref="STDOUT"/>
+            </then>
+        </if>
+        <appender-ref ref="ALL_FILE"/>
+        <appender-ref ref="INFO_FILE"/>
+        <appender-ref ref="ERROR_FILE"/>
+    </root>
+
+</configuration>
+
+
+

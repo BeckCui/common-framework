@@ -1,0 +1,334 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dhl.fin.api.dao.finfin.VersionDao">
+  <resultMap id="BaseResultMap" type="com.dhl.fin.api.domain.Version">
+    <id column="version_id" property="id" />
+    <result column="version_version" property="version" />
+    <result column="version_gsn_number" property="gsnNumber" />
+    <result column="version_implement_person" property="implementPerson" />
+    <result column="version_implement_date" property="implementDate" />
+    <result column="version_remark" property="remark" />
+    <result column="version_remove" property="remove" />
+    <result column="version_create_time" property="createTime" />
+    <result column="version_update_time" property="updateTime" />
+    <result column="version_create_user" property="createUser" />
+    <result column="version_update_user" property="updateUser" />
+    <association javaType="com.dhl.fin.api.domain.Project" property="project">
+      <id column="version_project_id" property="id" />
+      <result column="project_name" property="name" />
+      <result column="project_en_name" property="enName" />
+      <result column="project_code" property="code" />
+      <result column="project_owner" property="owner" />
+      <result column="project_owner_email" property="ownerEmail" />
+      <result column="project_introduction" property="introduction" />
+      <result column="project_remove" property="remove" />
+      <result column="project_create_time" property="createTime" />
+      <result column="project_update_time" property="updateTime" />
+      <result column="project_create_user" property="createUser" />
+      <result column="project_update_user" property="updateUser" />
+    </association>
+  </resultMap>
+  <sql id="Base_Column_List">
+    version.id as version_id,version.create_time as version_create_time,version.create_user as version_create_user,version.remove as version_remove,version.update_time as version_update_time,version.update_user as version_update_user,version.gsn_number as version_gsn_number,version.implement_date as version_implement_date,
+    version.implement_person as version_implement_person,version.remark as version_remark,version.version as version_version,version.project_id as version_project_id
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="domain.tableAlia == 'project'">
+          ,project.name as project_name,project.en_name as project_en_name,project.code as project_code,project.owner as project_owner,project.owner_email as project_owner_email,project.introduction as project_introduction,project.id as project_id,project.remove as project_remove,project.create_time as project_create_time,project.update_time as project_update_time,project.create_user as project_create_user,project.update_user as project_update_user
+        </if>
+      </foreach>
+    </if>
+  </sql>
+  <sql id="select_sql">
+    select  <if test='selectOne'>top 1</if>
+    <include refid="Base_Column_List" />
+    from t_version version
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on version.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on version.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on version.id=${domain.middleTable}_alis.version_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where 1=1 
+    <if test="whereCondition != null">
+      <foreach collection="whereCondition" index="index" item="condition">
+        and ${condition}
+      </foreach>
+    </if>
+    <if test="orderCondition != null">
+      <trim prefix="order by" suffixOverrides=",">
+        <foreach collection="orderCondition" index="index" item="condition">
+           ${condition},
+        </foreach>
+      </trim>
+    </if>
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap">
+    select  <if test='selectOne'>top 1</if>
+    <include refid="Base_Column_List" />
+    from t_version version
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on version.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on version.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on version.id=${domain.middleTable}_alis.version_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where version.id = #{id,jdbcType=BIGINT}
+  </select>
+  <select id="selectPageQuery" resultMap="BaseResultMap">
+    with dd as (select distinct ${orderFields} from t_version version 
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on version.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on version.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on version.id=${domain.middleTable}_alis.version_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where 1 = 1 
+    <if test="whereCondition != null">
+      <foreach collection="whereCondition" index="index" item="condition">
+        and ${condition}
+      </foreach>
+    </if>
+    <if test="orderCondition != null">
+      <trim prefix="order by" suffixOverrides=",">
+        <foreach collection="orderCondition" index="index" item="condition">
+           ${condition},
+        </foreach>
+      </trim>
+    </if>
+    offset ${startIndex} rows fetch next ${length} rows only)
+    select <include refid="Base_Column_List" />
+    from t_version version
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on version.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on version.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on version.id=${domain.middleTable}_alis.version_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where exists(select 1 from dd where dd.id = version.id)
+    <if test="orderCondition != null">
+      <trim prefix="order by" suffixOverrides=",">
+        <foreach collection="orderCondition" index="index" item="condition">
+           ${condition},
+        </foreach>
+      </trim>
+    </if>
+  </select>
+  <select id="selectSelective" resultMap="BaseResultMap">
+    <include refid="select_sql" />
+  </select>
+  <select id="selectCount" resultType="java.lang.Integer">
+    select count(1) total from (
+    select  <if test='selectOne'>top 1</if>
+     distinct ${fields}
+    from t_version version
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on version.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on version.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on version.id=${domain.middleTable}_alis.version_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where 1=1 
+    <if test="whereCondition != null">
+      <foreach collection="whereCondition" index="index" item="condition">
+        and ${condition}
+      </foreach>
+    </if>
+    <if test="orderCondition != null">
+      <trim prefix="order by" suffixOverrides=",">
+        <foreach collection="orderCondition" index="index" item="condition">
+           ${condition},
+        </foreach>
+      </trim>
+    </if>
+    ) as s
+  </select>
+  <update id="deleteByPrimaryKey">
+      update t_version set remove = 1 , update_time=#{updateTime} , update_user=#{updateUser} where id = #{id,jdbcType=BIGINT}
+  </update>
+  <insert id="insert" parameterType="com.dhl.fin.api.domain.Version">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Long">
+       SELECT @@IDENTITY
+    </selectKey>
+    insert into t_version (create_time, create_user, remove, 
+      update_time, update_user, gsn_number, 
+      implement_date, implement_person, remark, 
+      version, project_id)
+    values (#{createTime,jdbcType=TIMESTAMP}, #{createUser,jdbcType=VARCHAR}, #{remove,jdbcType=BIT}, 
+      #{updateTime,jdbcType=TIMESTAMP}, #{updateUser,jdbcType=VARCHAR}, #{gsnNumber,jdbcType=VARCHAR}, 
+      #{implementDate,jdbcType=TIMESTAMP}, #{implementPerson,jdbcType=VARCHAR}, #{remark,jdbcType=VARCHAR}, 
+    #{version,jdbcType=VARCHAR},#{project.id,jdbcType=BIGINT})
+  </insert>
+  <insert id="insertSelective" parameterType="com.dhl.fin.api.domain.Version">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Long">
+       SELECT @@IDENTITY
+    </selectKey>
+    insert into t_version
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="createTime != null">
+        create_time,
+      </if>
+      <if test="createUser != null">
+        create_user,
+      </if>
+      <if test="remove != null">
+        remove,
+      </if>
+      <if test="updateTime != null">
+        update_time,
+      </if>
+      <if test="updateUser != null">
+        update_user,
+      </if>
+      <if test="gsnNumber != null">
+        gsn_number,
+      </if>
+      <if test="implementDate != null">
+        implement_date,
+      </if>
+      <if test="implementPerson != null">
+        implement_person,
+      </if>
+      <if test="remark != null">
+        remark,
+      </if>
+      <if test="version != null">
+        version,
+      </if>
+      <if test="project != null and project.id != null">
+        project_id,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createUser != null">
+        #{createUser,jdbcType=VARCHAR},
+      </if>
+      <if test="remove != null">
+        #{remove,jdbcType=BIT},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateUser != null">
+        #{updateUser,jdbcType=VARCHAR},
+      </if>
+      <if test="gsnNumber != null">
+        #{gsnNumber,jdbcType=VARCHAR},
+      </if>
+      <if test="implementDate != null">
+        #{implementDate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="implementPerson != null">
+        #{implementPerson,jdbcType=VARCHAR},
+      </if>
+      <if test="remark != null">
+        #{remark,jdbcType=VARCHAR},
+      </if>
+      <if test="version != null">
+        #{version,jdbcType=VARCHAR},
+      </if>
+      <if test="project != null and project.id != null">
+        #{project.id,jdbcType=BIGINT},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective">
+    update t_version
+    <set>
+      <if test="domain.createTime != null ">
+        create_time = #{domain.createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="domain.createUser != null ">
+        create_user = #{domain.createUser,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.remove != null ">
+        remove = #{domain.remove,jdbcType=BIT},
+      </if>
+      <if test="domain.updateTime != null ">
+        update_time = #{domain.updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="domain.updateUser != null ">
+        update_user = #{domain.updateUser,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.gsnNumber != null ">
+        gsn_number = #{domain.gsnNumber,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.implementDate != null ">
+        implement_date = #{domain.implementDate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="domain.implementPerson != null ">
+        implement_person = #{domain.implementPerson,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.remark != null ">
+        remark = #{domain.remark,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.version != null ">
+        version = #{domain.version,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.project != null  and domain.project.id != null ">
+        project_id = #{domain.project.id,jdbcType=BIGINT},
+      </if>
+    </set>
+    <trim prefix="where" suffixOverrides="and">
+      <foreach collection="query.whereCondition" item="condition">
+         ${condition}
+      </foreach>
+    </trim>
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.dhl.fin.api.domain.Version">
+    update t_version
+    set create_time = #{createTime,jdbcType=TIMESTAMP},
+      create_user = #{createUser,jdbcType=VARCHAR},
+      remove = #{remove,jdbcType=BIT},
+      update_time = #{updateTime,jdbcType=TIMESTAMP},
+      update_user = #{updateUser,jdbcType=VARCHAR},
+      gsn_number = #{gsnNumber,jdbcType=VARCHAR},
+      implement_date = #{implementDate,jdbcType=TIMESTAMP},
+      implement_person = #{implementPerson,jdbcType=VARCHAR},
+      remark = #{remark,jdbcType=VARCHAR},
+      version = #{version,jdbcType=VARCHAR},
+      project_id = #{project.id,jdbcType=BIGINT}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <select id="selectOne" resultMap="BaseResultMap">
+    <include refid="select_sql"/>
+  </select>
+</mapper>

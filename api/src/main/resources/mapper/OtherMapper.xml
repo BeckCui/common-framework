@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dhl.fin.api.dao.fin.OtherDao">
+
+
+    <select id="queryRoleAction" resultType="Map">
+
+        select roleName,
+               menuName,
+               case
+                 when menuName = ss
+                   then
+                   STUFF((select concat(',', dd.title)
+                          from (
+                                 select title
+                                 from t_tree
+                                 where remove = 0 and parent_line like  ((select parent_line from t_tree where id = sd.menuId) + '%')
+                                   and menu_id is null
+                               ) dd FOR XML PATH ('')), 1, 1, '')
+                 else ss
+                 end as nn
+        from (
+               SELECT roleName,
+                      menuName,
+                      menuId,
+                      STUFF((select concat(',', dd.actionName)
+                             from (
+                                    select uam.actionName
+                                    from uam
+                                      where uam.menuName = a.menuName
+                                      and uam.roleName = a.roleName
+                                  ) dd FOR XML PATH ('')), 1, 1, '') ss
+               from uam a
+               where a.parent_line like  CONCAT(#{projectCode},'_%')
+               group by roleName, menuName, menuId
+             ) as sd
+    </select>
+
+    <select id="queryLastUpdate" resultType="String">
+       select top 1 convert(varchar(100), update_time, 23) from t_account order by update_time asc
+    </select>
+
+    <select id="queryUserRole" resultType="Map">
+        select acct.uuid, p.code projectCode, tr.code roleCode,tr.name roleName
+        from t_account acct
+               left join t_account_project tap on acct.id = tap.account_id
+               left join t_project p on p.id = tap.project_id
+               left join t_account_role tar on acct.id = tar.account_id
+               left join t_role tr on tar.role_id = tr.id
+        where acct.uuid = #{uuid}
+          and tr.remove = 0
+          and p.remove = 0
+          and tr.project_id = p.id
+        group by acct.uuid, p.code, tr.code,tr.name
+    </select>
+
+
+
+</mapper>
+
+
+
+
+
+
+
+
+
+
+

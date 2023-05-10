@@ -1,0 +1,603 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dhl.fin.api.dao.uam.UamDao">
+
+
+    <select id="waitReview" resultType="Map">
+
+        select Application_Name,
+           task.User_Account as taskUUid,
+           task.User_Email,
+           Review_Result,
+           userinfo.User_Account as assginUuid,
+           case task.Task_Status
+             when 0 then '未反馈'
+             when 1 then '已反馈'
+             when 2 then '已确认'
+             when 3 then '处置中'
+             when 4 then '已完成'
+             when 4 then '已中止'
+             end as status
+            from Uam_Task task
+                   left join Uam_User_Info userinfo on task.Assignee_Id = userinfo.id
+            where task.create_user = #{uuid}
+              and task.create_date > #{today}
+
+
+    </select>
+
+    <select id="queryHrInfo" resultType="com.dhl.fin.api.domain.Account">
+        select top 1 uuid,area,cluster,cn_name name from  UAM_EHR_EMPLOYEE_DATA where uuid in (#{uuids})
+    </select>
+
+
+    <!--总任务量-->
+    <select id="totalTaskAmount" resultType="Integer">
+        select count(1) n
+          from Uam_Task
+          where create_user = #{itOwner}
+            and create_date > #{startTime}
+    </select>
+
+    <!--总app数量-->
+    <select id="totalAppAmount" resultType="Integer">
+    select count(1) n
+    from (select distinct Application_Name
+          from Uam_Task
+          where create_user = #{itOwner}
+            and create_date > #{startTime}
+      ) as dd
+    </select>
+
+    <!--每个状态的完成数量-->
+    <select id="stepProcess" resultType="Map">
+
+    with t_temp as (
+      select (case Task_Status when 0 then sum(1) end) as wait,
+             (case Task_Status when 1 then sum(1) end) as result,
+             (case Task_Status when 2 then sum(1) end) as confirm,
+             (case Task_Status when 3 then sum(1) end) as deal,
+             (case Task_Status when 4 then sum(1) end) as archer,
+             (case Task_Status when 4 then sum(1) end) as abort
+      from Uam_Task
+       where create_date > #{startTime}
+       and Create_User = #{itOwner}
+      group by Task_Status
+    )
+    select (select top 1 wait from t_temp where wait is not null)           wait,
+           (select top 1 result from t_temp where result is not null)     result,
+           (select top 1 confirm from t_temp where confirm is not null)  confirm,
+           (select top 1 deal from t_temp where deal is not null)           deal,
+           (select top 1 archer from t_temp where archer is not null)     archer,
+           (select top 1 abort from t_temp where abort is not null)        abort
+
+    </select>
+
+    <!--每个app的进度-->
+    <select id="queryAppTotal" resultType="Map">
+      select * from (
+              select Application_Name as appName,
+               (select count(1)
+                from Uam_Task task
+                where task.create_date > #{startTime}
+                  and task.Create_User = #{itOwner}
+                  and task.Application_Name = quarterTask.Application_Name)                                       as 'total',
+             case
+              when (select count(1)
+                  from Uam_Task task
+                  where task.create_date > #{startTime}
+                    and task.Create_User = #{itOwner}
+                    and task.Application_Name = quarterTask.Application_Name) > 0
+              then ((select count(1)
+                from Uam_Task task
+                where task.create_date > #{startTime}
+                  and task.Create_User = #{itOwner}
+                  and task.Application_Name = quarterTask.Application_Name
+                  and task.Task_Status >= 1) * 100 / (select count(1)
+                                                      from Uam_Task task
+                                                      where task.create_date > #{startTime}
+                                                        and task.Create_User = #{itOwner}
+                                                        and task.Application_Name = quarterTask.Application_Name))
+                else 0 end as 'confirmRatio',
+
+              case
+               when (select count(1)
+                    from Uam_Task task
+                    where task.create_date > #{startTime}
+                    and task.Create_User = #{itOwner}
+                    and task.Application_Name = quarterTask.Application_Name) > 0
+               then ((select count(1)
+                                from Uam_Task task
+                                where task.create_date > #{startTime}
+                                  and task.Create_User = #{itOwner}
+                                  and task.Application_Name = quarterTask.Application_Name
+                                  and task.Task_Status = 4) * 100 / (select count(1)
+                                                                      from Uam_Task task
+                                                                      where task.create_date > #{startTime}
+                                                                        and task.Create_User = #{itOwner}
+                                                                        and task.Application_Name = quarterTask.Application_Name))
+                 else 0 end as 'finishedRatio',
+
+               (select count(1)
+                from Uam_Task task
+                where task.create_date > #{startTime}
+                  and task.Create_User = #{itOwner}
+                  and task.Application_Name = quarterTask.Application_Name
+                  and task.Task_Status = 0)                                                                       as 'wait',
+               (select count(1)
+                from Uam_Task task
+                where task.create_date > #{startTime}
+                  and task.Create_User = #{itOwner}
+                  and task.Application_Name = quarterTask.Application_Name
+                  and task.Task_Status = 1)                                                                       as 'done',
+               (select count(1)
+                from Uam_Task task
+                where task.create_date > #{startTime}
+                  and task.Create_User = #{itOwner}
+                  and task.Application_Name = quarterTask.Application_Name
+                  and task.Task_Status = 2)                                                                       as 'confirm',
+               (select count(1)
+                from Uam_Task task
+                where task.create_date > #{startTime}
+                  and task.Create_User = #{itOwner}
+                  and task.Application_Name = quarterTask.Application_Name
+                  and task.Task_Status = 3)                                                                       as 'deal',
+               (select count(1)
+                from Uam_Task task
+                where task.create_date > #{startTime}
+                  and task.Create_User = #{itOwner}
+                  and task.Application_Name = quarterTask.Application_Name
+                  and task.Task_Status = 4)                                                                       as 'archer',
+               (select count(1)
+                from Uam_Task task
+                where task.create_date > #{startTime}
+                  and task.Create_User = #{itOwner}
+                  and task.Application_Name = quarterTask.Application_Name
+                  and task.Task_Status = 5)                                                                       as 'abort'
+
+                from Uam_Quarterly_Task quarterTask
+                where Application_Name in (
+                  select Application_Name
+                  from Uam_Task
+                  where Create_User = #{itOwner}
+                    and create_date > #{startTime}
+                )
+                  and create_date > #{startTime}
+           ) as cc
+          order by cc.confirmRatio
+
+    </select>
+
+
+    <!--已反馈总进度-->
+    <select id="totalProcess" resultType="Integer">
+       select case
+                when (select count(1)
+                                                 from Uam_Task
+                                                 where Create_User = #{itOwner}
+                                                   and create_date > #{startTime}) > 0
+
+                then ((select count(1)
+                from Uam_Task
+                where Create_User = #{itOwner}
+                  and create_date > #{startTime}
+                  and Task_Status >= 1) * 100 / (select count(1)
+                                                 from Uam_Task
+                                                 where Create_User = #{itOwner}
+                                                   and create_date > #{startTime})
+                ) else 0 end
+    </select>
+
+    <!--已归档总进度-->
+    <select id="archerProcess" resultType="Integer">
+       select case
+                when (select count(1)
+                     from Uam_Task
+                     where Create_User = #{itOwner}
+                       and create_date > #{startTime}) > 0
+                then  ((select count(1)
+                from Uam_Task
+                where Create_User = #{itOwner}
+                  and create_date > #{startTime}
+                  and Task_Status = 4) * 100 / (select count(1)
+                                                 from Uam_Task
+                                                 where Create_User = #{itOwner}
+                                                   and create_date > #{startTime})
+                    ) else 0 end
+    </select>
+
+    <!--OPS 未review总数-->
+    <select id="opsWaitTotal" resultType="Integer">
+
+    select count(1) n
+    from Uam_Task a
+           left join Uam_User_Info userinfo on a.Assignee_Id = userinfo.id
+    where a.Create_User = #{itOwner}
+      and a.create_date > #{startTime}
+      and a.Task_Status = 0
+      and userinfo.User_Account in
+          ('ericleli', 'qiangyao', 'shunzhao', 'simwang', 'xinzli', 'zhilguo', 'zjjiang', 'ruhou', 'shmliu', 'chema',
+           'taoliu', 'hdding', 'rygao', 'damliu', 'yiyiliu', 'qwang', 'zxyang', 'zgma', 'tadong', 'shliu', 'linyan',
+           'ericwang', 'bodong', 'tyu', 'miliu', 'haitali', 'yafliang', 'mhli', 'chenjun', 'xhhu', 'feyao', 'carliu',
+           'chewcai', 'hjing', 'juchen', 'zhoujun', 'yuywang', 'davihuan', 'xiujhan', 'xiupzhen', 'huili', 'tiaccui',
+           'ylli', 'chenjju', 'alshao', 'bofliu', 'xiayan', 'jjzhou', 'lfang', 'zhfpeng', 'byma', 'xddeng', 'kxliu',
+           'chiliang', 'xianjliu', 'rdliang', 'bihlu', 'zilonghu', 'zonmo', 'andpan', 'mdeng', 'xiyin', 'zhanglin',
+           'fengzhao', 'liagwang', 'dwfang', 'cpji', 'gpweng', 'jhbao', 'jghan', 'jinyao', 'xfechen', 'dwgu', 'eyou',
+           'kuzhao', 'yotjiang', 'juntang', 'jieni', 'dictan', 'zhmxiang', 'hohuang', 'liularry', 'jhmiao', 'liangb',
+           'haowu', 'jlshu', 'zhdliu', 'hytong', 'linjie', 'linnalin', 'chenliuu', 'xnlu', 'debzhao', 'kaiche', 'tayzhang',
+           'cyjiang', 'wangshg', 'shuli', 'lijiwan', 'xizha', 'byzhu', 'jianyao', 'bxzheng', 'changjac', 'ryliang',
+           'maxluo', 'stoneshi', 'jconglin', 'xli', 'ybluo', 'hlwan', 'pennypan', 'chzhyu', 'yuqiao', 'grgu', 'msang',
+           'ydyang', 'zhijwu', 'peftang', 'jhshi', 'wjfu', 'yowang', 'tingwang', 'rkang', 'zpni', 'reblu', 'yuanxli',
+           'shfwei', 'vivzhang', 'hcwang', 'zgsheng', 'qqiu', 'xcheng', 'peiyiw', 'hairlin', 'ktchen', 'fding', 'rzhzhang',
+           'jqliu', 'juemmo', 'tixia', 'timxu', 'yibluo', 'cajwu', 'jiye', 'kfzhang', 'yub', 'chenw', 'gyhu', 'davliang',
+           'lewang', 'qhzhu', 'ruhou', 'shmliu', 'chema', 'taoliu', 'hdding', 'rygao', 'damliu',
+           'yiyiliu', 'qwang', 'zxyang', 'zgma', 'tadong', 'shliu', 'linyan', 'ericwang', 'bodong', 'tyu', 'miliu',
+           'haitali', 'yafliang', 'mhli', 'chenjun', 'xhhu', 'feyao', 'carliu', 'chewcai', 'hjing', 'juchen', 'zhoujun',
+           'yuywang', 'davihuan', 'xiujhan', 'xiupzhen', 'huili', 'tiaccui', 'ylli', 'chenjju', 'alshao', 'bofliu',
+           'xiayan', 'jjzhou', 'lfang', 'zhfpeng', 'byma', 'xddeng', 'kxliu', 'chiliang', 'xianjliu', 'rdliang', 'bihlu',
+           'zilonghu', 'zonmo', 'andpan', 'mdeng', 'xiyin', 'zhanglin', 'fengzhao', 'liagwang', 'dwfang', 'cpji', 'gpweng',
+           'jhbao', 'jghan', 'jinyao', 'xfechen', 'dwgu', 'eyou', 'kuzhao', 'yotjiang', 'juntang', 'jieni', 'dictan',
+           'zhmxiang', 'hohuang', 'liularry', 'jhmiao', 'liangb', 'haowu', 'jlshu', 'zhdliu', 'hytong', 'linjie',
+           'linnalin', 'chenliuu', 'xnlu', 'debzhao', 'kaiche', 'tayzhang', 'cyjiang', 'wangshg', 'shuli', 'lijiwan',
+           'xizha', 'byzhu', 'jianyao', 'bxzheng', 'changjac', 'ryliang', 'maxluo', 'stoneshi', 'jconglin', 'xli', 'ybluo',
+           'hlwan', 'pennypan', 'chzhyu', 'yuqiao', 'grgu', 'msang', 'ydyang', 'zhijwu', 'peftang', 'jhshi', 'wjfu',
+           'yowang', 'tingwang', 'rkang', 'zpni', 'reblu', 'yuanxli', 'shfwei', 'vivzhang', 'hcwang', 'zgsheng', 'qqiu',
+           'xcheng', 'peiyiw', 'hairlin', 'ktchen', 'fding', 'rzhzhang', 'jqliu', 'juemmo', 'tixia', 'timxu', 'yibluo',
+           'cajwu', 'jiye', 'kfzhang', 'yub', 'chenw', 'gyhu', 'davliang', 'lewang', 'qhzhu',
+           'guyxu', 'hscao', 'huawu', 'lihli', 'linjju', 'liqding', 'mdzhang', 'petweng', 'ranwei', 'rujchen',
+           'songyan', 'xiahzhan', 'ymzhou', 'ysong', 'zhijunli', 'zhiwchen', 'zjdu')
+
+    </select>
+
+
+    <!--IT 未review总数-->
+    <select id="itWaitTotal" resultType="Integer">
+        select count(1) n
+        from Uam_Task a
+        left join Uam_User_Info userinfo on a.Assignee_Id = userinfo.id
+        where a.Create_User = #{itOwner}
+        and a.create_date > #{startTime}
+        and a.Task_Status = 0
+        and userinfo.User_Account in ('yuayuan')
+    </select>
+
+    <!--SLS 未review总数-->
+    <select id="saleWaitTotal" resultType="Integer">
+        select count(1) n
+        from Uam_Task a
+        left join Uam_User_Info userinfo on a.Assignee_Id = userinfo.id
+        where a.Create_User = #{itOwner}
+        and a.create_date > #{startTime}
+        and a.Task_Status = 0
+        and userinfo.User_Account in ('xshulu')
+    </select>
+
+    <!--CSD 未review总数-->
+    <select id="csdWaitTotal" resultType="Integer">
+        select count(1) n
+        from Uam_Task a
+        left join Uam_User_Info userinfo on a.Assignee_Id = userinfo.id
+        where a.Create_User = #{itOwner}
+        and a.create_date > #{startTime}
+        and a.Task_Status = 0
+        and userinfo.User_Account in ('cxsong','qqli','lqian','twan')
+    </select>
+
+    <!--FIN 未review总数-->
+    <select id="finWaitTotal" resultType="Integer">
+          select count(1) n
+        from Uam_Task a
+        left join Uam_User_Info userinfo on a.Assignee_Id = userinfo.id
+        where a.Create_User = #{itOwner}
+        and a.create_date > #{startTime}
+        and a.Task_Status = 0
+        and userinfo.User_Account not in (#{itOwner},'xijlian','trahuang','wangping','libhu','admin-becui','gaoxia','janicewa',
+        'bsshi','weesun','admin-becui','zhiyu','xiczhang','lyxing','admin-becui','trahuang','showang','showang','richen',
+        'chyzuo','janicewa','zhangxy','wwtang','emmni','admin-becui','yannwen','xiczhang','yuanhang','admin-becui','richen','yhe','richen',
+        'admin-becui','xijlian','yuayuan','kding','catdeng','zhangxy','gaoxia','admin-becui','yuayuan','ithluo','yuanhang','richen','yhe','richen',
+        'teliu','admin-becui','showang','mzhao','showang','','linf','ylshuai','yolli','jwei','yjuan','lma','wwtang','lijuan','qmliu','yangk','wangqian',
+        'hmtang','chenna','teliu','yafwang','zmwen','hhuahe','hujin','hanwu','yxhan','jrao','huanyan','dyyuan','gaoxia','huangyu','liqding','ranwei','linjju',
+        'petweng','xiahzhan','mdzhang','zhiwchen','guyxu','zjdu','huawu','lihli','ymzhou','ysong','songyan','rujchen','hscao','zhijunli',
+         'alelu','andzhou','bettych','bsshi','chyzhang','ericleli','feixie','gelan','janehe','jipchen','jizhuang','jkhong','jmzhai','jojguan','joyjiang','junli',
+        'jyu','linazeng','lulwang','lyxing','marsfan','myang','ppzhang','ppzhuo','richen','weesun','xjlei','xshulu','yuayuan','qiangyao','shunzhao','simwang',
+        'xinzli','zhilguo','zjjiang','ruhou','shmliu','chema','taoliu','hdding','rygao','damliu','yiyiliu','qwang','zxyang','zgma','tadong','shliu','linyan',
+        'ericwang','bodong','tyu','miliu','haitali','yafliang','mhli','chenjun','xhhu','feyao','carliu','chewcai','hjing','juchen','zhoujun','yuywang','davihuan',
+        'xiujhan','xiupzhen','huili','tiaccui','ylli','chenjju','alshao','bofliu','xiayan','jjzhou','lfang','zhfpeng','byma','xddeng','kxliu','chiliang','xianjliu','rdliang',
+        'bihlu','zilonghu','zonmo','andpan','mdeng','xiyin','zhanglin','fengzhao','liagwang','dwfang','cpji','gpweng','jhbao','jghan','jinyao','xfechen','dwgu','eyou','kuzhao',
+        'yotjiang','juntang','jieni','dictan','zhmxiang','hohuang','liularry','jhmiao','liangb','haowu','jlshu','zhdliu','hytong','linjie','linnalin','chenliuu','xnlu','debzhao',
+        'kaiche','tayzhang','cyjiang','wangshg','shuli','lijiwan','xizha','byzhu','jianyao','bxzheng','changjac','ryliang','maxluo','stoneshi','jconglin','xli','ybluo','hlwan',
+        'pennypan','chzhyu','yuqiao','grgu','msang','ydyang','zhijwu','peftang','jhshi','wjfu','yowang','tingwang','rkang','zpni','reblu','yuanxli','shfwei','vivzhang','hcwang',
+        'zgsheng','qqiu','xcheng','peiyiw','hairlin','ktchen','fding','rzhzhang','jqliu','cxsong','qqli','lqian','twan'
+        ,'juemmo','tixia','timxu','yibluo','cajwu','jiye','kfzhang','yub','chenw','gyhu','davliang','lewang','qhzhu')
+    </select>
+
+    <!--每个reviewer的task数量-->
+    <select id="taskPerReviewer" resultType="Map">
+
+        select userinfo.id,
+               userinfo.User_Account,
+               count(1)           n,
+               STUFF((select ',' + Application_Name
+                      from (select distinct Application_Name
+                            from Uam_Task task
+                            where userinfo.id = task.Assignee_Id
+                              and task.Create_User = #{itOwner}
+                              and task.create_date > #{startTime}
+                              and task.Task_Status = 0) as cc for xml path ('')),
+                     1, 1, '') as applicationName
+        from Uam_Task a
+               left join Uam_User_Info userinfo on a.Assignee_Id = userinfo.id
+        where a.Create_User = #{itOwner}
+          and a.create_date > #{startTime}
+          and a.Task_Status = 0
+          and userinfo.User_Account not in
+              ('ericleli', 'qiangyao', 'shunzhao', 'simwang', 'xinzli', 'zhilguo', 'zjjiang', 'ruhou', 'shmliu', 'chema',
+               'taoliu', 'hdding', 'rygao', 'damliu', 'yiyiliu', 'qwang', 'zxyang', 'zgma', 'tadong', 'shliu', 'linyan',
+               'ericwang', 'bodong', 'tyu', 'miliu', 'haitali', 'yafliang', 'mhli', 'chenjun', 'xhhu', 'feyao', 'carliu',
+               'chewcai', 'hjing', 'juchen', 'zhoujun', 'yuywang', 'davihuan', 'xiujhan', 'xiupzhen', 'huili', 'tiaccui',
+               'ylli', 'chenjju', 'alshao', 'bofliu', 'xiayan', 'jjzhou', 'lfang', 'zhfpeng', 'byma', 'xddeng', 'kxliu',
+               'chiliang', 'xianjliu', 'rdliang', 'bihlu', 'zilonghu', 'zonmo', 'andpan', 'mdeng', 'xiyin', 'zhanglin',
+               'fengzhao', 'liagwang', 'dwfang', 'cpji', 'gpweng', 'jhbao', 'jghan', 'jinyao', 'xfechen', 'dwgu', 'eyou',
+               'kuzhao', 'yotjiang', 'juntang', 'jieni', 'dictan', 'zhmxiang', 'hohuang', 'liularry', 'jhmiao', 'liangb',
+               'haowu', 'jlshu', 'zhdliu', 'hytong', 'linjie', 'linnalin', 'chenliuu', 'xnlu', 'debzhao', 'kaiche', 'tayzhang',
+               'cyjiang', 'wangshg', 'shuli', 'lijiwan', 'xizha', 'byzhu', 'jianyao', 'bxzheng', 'changjac', 'ryliang',
+               'maxluo', 'stoneshi', 'jconglin', 'xli', 'ybluo', 'hlwan', 'pennypan', 'chzhyu', 'yuqiao', 'grgu', 'msang',
+               'ydyang', 'zhijwu', 'peftang', 'jhshi', 'wjfu', 'yowang', 'tingwang', 'rkang', 'zpni', 'reblu', 'yuanxli',
+               'shfwei', 'vivzhang', 'hcwang', 'zgsheng', 'qqiu', 'xcheng', 'peiyiw', 'hairlin', 'ktchen', 'fding', 'rzhzhang',
+               'jqliu', 'juemmo', 'tixia', 'timxu', 'yibluo', 'cajwu', 'jiye', 'kfzhang', 'yub', 'chenw', 'gyhu', 'davliang',
+               'qqli', 'lqian', 'twan', 'lewang', 'qhzhu', 'ruhou', 'shmliu', 'chema', 'taoliu', 'hdding', 'rygao', 'damliu',
+               'yiyiliu', 'qwang', 'zxyang', 'zgma', 'tadong', 'shliu', 'linyan', 'ericwang', 'bodong', 'tyu', 'miliu',
+               'haitali', 'yafliang', 'mhli', 'chenjun', 'xhhu', 'feyao', 'carliu', 'chewcai', 'hjing', 'juchen', 'zhoujun',
+               'yuywang', 'davihuan', 'xiujhan', 'xiupzhen', 'huili', 'tiaccui', 'ylli', 'chenjju', 'alshao', 'bofliu',
+               'xiayan', 'jjzhou', 'lfang', 'zhfpeng', 'byma', 'xddeng', 'kxliu', 'chiliang', 'xianjliu', 'rdliang', 'bihlu',
+               'zilonghu', 'zonmo', 'andpan', 'mdeng', 'xiyin', 'zhanglin', 'fengzhao', 'liagwang', 'dwfang', 'cpji', 'gpweng',
+               'jhbao', 'jghan', 'jinyao', 'xfechen', 'dwgu', 'eyou', 'kuzhao', 'yotjiang', 'juntang', 'jieni', 'dictan',
+               'zhmxiang', 'hohuang', 'liularry', 'jhmiao', 'liangb', 'haowu', 'jlshu', 'zhdliu', 'hytong', 'linjie',
+               'linnalin', 'chenliuu', 'xnlu', 'debzhao', 'kaiche', 'tayzhang', 'cyjiang', 'wangshg', 'shuli', 'lijiwan',
+               'xizha', 'byzhu', 'jianyao', 'bxzheng', 'changjac', 'ryliang', 'maxluo', 'stoneshi', 'jconglin', 'xli', 'ybluo',
+               'hlwan', 'pennypan', 'chzhyu', 'yuqiao', 'grgu', 'msang', 'ydyang', 'zhijwu', 'peftang', 'jhshi', 'wjfu',
+               'yowang', 'tingwang', 'rkang', 'zpni', 'reblu', 'yuanxli', 'shfwei', 'vivzhang', 'hcwang', 'zgsheng', 'qqiu',
+               'xcheng', 'peiyiw', 'hairlin', 'ktchen', 'fding', 'rzhzhang', 'jqliu', 'juemmo', 'tixia', 'timxu', 'yibluo',
+               'cajwu', 'jiye', 'kfzhang', 'yub', 'chenw', 'gyhu', 'davliang', 'qqli', 'lqian', 'twan', 'lewang', 'qhzhu',
+               'cxsong', 'guyxu', 'hscao', 'huawu', 'lihli', 'linjju', 'liqding', 'mdzhang', 'petweng', 'ranwei', 'rujchen',
+               'songyan', 'xiahzhan', 'ymzhou', 'ysong', 'zhijunli', 'zhiwchen', 'zjdu')
+                group by userinfo.id, userinfo.User_Account
+                order by count(1) desc
+
+    </select>
+
+    <select id="reviewerTasks" resultType="Map">
+
+        with tempApp as (select distinct Application_Name
+                         from Uam_Task a
+                         where Create_User = #{itOwner}
+                           and create_date > #{startTime}
+                         union all
+                         select distinct task.Application_Name
+                         from Uam_Quarterly_Tree a
+                                left join Uam_User_Info userinfo on a.Report_To_Id = userinfo.Id
+                                left join Uam_Quarterly_Task task on a.Uam_Quarterly_Task_Id = task.Id
+                         where userinfo.User_Account = 'joyjiang'
+                           and a.Create_Date > #{startTime}),
+             dd as (select concat(Application_Name, '(', count(1), ')') app, Assignee_Id
+                    from Uam_Task a
+                    where exists(select 1 from tempApp where tempApp.Application_Name = a.Application_Name)
+                      and a.create_date > #{startTime}
+                      and a.Task_Status = 0
+                    group by Application_Name, Assignee_Id
+             )
+        select userinfo.User_Account as                                 uuid,
+               a.Assignee_Id                                            userId,
+               hr.cn_name                                               name,
+               hr.email                                                 email,
+               hr.department,
+               (select '' + app + ','
+                from dd
+                where dd.Assignee_Id = a.Assignee_Id for xml path ('')) apps
+        from Uam_Task a
+               left join Uam_User_Info userinfo on a.Assignee_Id = userinfo.Id
+               left join UAM_EHR_EMPLOYEE_DATA hr on userinfo.User_Account = hr.uuid
+        where exists(select 1 from tempApp where tempApp.Application_Name = a.Application_Name)
+          and a.create_date > #{startTime}
+          and a.Task_Status = 0
+          and userinfo.User_Account in (${reivewers})
+        group by userinfo.User_Account, a.Assignee_Id,
+                 hr.cn_name, hr.email, hr.department
+
+    </select>
+
+    <select id="allTeamProcess" resultType="Map">
+
+        select * from (
+                select a.Create_User owner,
+                       a.Task_Status status,
+                       count(1)      totalSum,
+                       ROUND((count(1) * 1.0 /
+                              (select count(1)
+                               from Uam_Task
+                               where Uam_Task.create_date >  #{startTime}
+                                 and Uam_Task.Create_User = a.Create_User
+                              )), 2) taskPercent,
+                       ROUND(((select count(1)
+                               from Uam_Task
+                               where Uam_Task.create_date >  #{startTime}
+                                 and Uam_Task.Create_User = a.Create_User
+                                 and Uam_Task.Task_Status > 0
+                              ) * 1.0 /
+                              (select count(1)
+                               from Uam_Task
+                               where Uam_Task.create_date >  #{startTime}
+                                 and Uam_Task.Create_User = a.Create_User
+                              )), 2) totalPercent
+                from Uam_Task a
+                where a.create_date >  #{startTime}
+                and a.Task_Status > 0
+                group by a.Create_User, a.Task_Status
+             ) as dd
+        order by totalPercent desc
+
+    </select>
+
+    <select id="allTeamArcherProcess" resultType="Map">
+
+        select * from (
+                select a.Create_User owner,
+                       a.Task_Status status,
+                       count(1)      totalSum,
+                       ROUND((count(1) * 1.0 /
+                              (select count(1)
+                               from Uam_Task
+                               where Uam_Task.create_date >  #{startTime}
+                                 and Uam_Task.Create_User = a.Create_User
+                              )), 2) taskPercent,
+                       ROUND(((select count(1)
+                               from Uam_Task
+                               where Uam_Task.create_date >  #{startTime}
+                                 and Uam_Task.Create_User = a.Create_User
+                                 and Uam_Task.Task_Status > 3
+                              ) * 1.0 /
+                              (select count(1)
+                               from Uam_Task
+                               where Uam_Task.create_date >  #{startTime}
+                                 and Uam_Task.Create_User = a.Create_User
+                              )), 2) totalPercent
+                from Uam_Task a
+                where a.create_date >  #{startTime}
+                and a.Task_Status > 3
+                group by a.Create_User, a.Task_Status
+             ) as dd
+        order by totalPercent desc
+    </select>
+
+    <select id="queryItOwner" resultType="String">
+        select distinct Create_User itOwner
+        from Uam_Task
+        where Create_Date > #{startTime}
+    </select>
+
+
+    <select id="pageQueryUAMAcct" resultType="String">
+        select distinct User_Account uuid
+            from Uam_Task
+            where User_Account not like '%@%'
+            and create_date >  #{startTime}
+            and User_Account not like '[0-9]%'
+            and User_Account not  like '%CN[0-9]%'
+            and Review_Result != 'Remove'
+            order by User_Account
+            offset #{startIndex} rows fetch next #{length} rows only
+    </select>
+    <select id="queryAcctCount" resultType="Integer">
+        select count(1)
+        from (
+            select distinct User_Account
+            from Uam_Task
+            where User_Account not like '%@%'
+            and create_date > #{startTime}
+            and User_Account not like '[0-9]%'
+            and User_Account not like '%CN[0-9]%'
+            and Review_Result != 'Remove'
+        ) ss
+    </select>
+
+
+    <select id="getAllReviewer" resultType="Map">
+      
+        with tempApp as (
+          select distinct Application_Name
+          from Uam_Task a
+          where Create_User = #{itOwner}
+            and create_date > #{startTime}
+        )
+        select distinct reviewer,shortdesc,department
+        from (
+               select distinct userinfo.User_Account reviewer, hrinfor.shortdesc, hrinfor.department
+               from Uam_Quarterly_Tree tree
+                      left join Uam_Quarterly_Task task on tree.Uam_Quarterly_Task_Id = task.Id
+                      left join Uam_User_Info userinfo on tree.Report_To_Id = userinfo.Id
+                      left join UAM_EHR_EMPLOYEE_DATA hrinfor on hrinfor.uuid = userinfo.User_Account
+               where task.Application_Name is not null
+                 and exists(select 1 from tempApp where tempApp.Application_Name = task.Application_Name)
+                 and task.create_date > #{startTime}
+               union all
+               select distinct userinfo.User_Account reviewer, hrinfor.shortdesc, hrinfor.department
+               from Uam_Quarterly_Tree tree
+                      left join Uam_Quarterly_Task task on tree.Uam_Quarterly_Task_Id = task.Id
+                      left join Uam_User_Info userinfo on tree.Uam_Reviewer_Id = userinfo.Id
+                      left join UAM_EHR_EMPLOYEE_DATA hrinfor on hrinfor.uuid = userinfo.User_Account
+               where task.Application_Name is not null
+                 and exists(select 1 from tempApp where tempApp.Application_Name = task.Application_Name)
+                 and task.create_date > #{startTime}
+               union all
+               select 'joyjiang' as reviewer, 'FIN' shortdesc, 'FIN' department
+             ) as dd
+
+    </select>
+
+    <select id="getFinAllApp" resultType="String">
+          select distinct Application_Name
+          from Uam_Task a
+          where Create_User = #{itOwner}
+          and create_date > #{startTime}
+    </select>
+
+    <select id="getAllTask" resultType="Map">
+          select *
+          from Uam_Task a
+          where Create_User = #{itOwner}
+          and create_date > #{startTime}
+    </select>
+
+    <select id="getItOwner" resultType="String">
+         select distinct Create_User itOwner from Uam_Task where create_date >  #{startTime}
+    </select>
+
+    <select id="selectAllRemoveAcct" resultType="Map">
+
+        with dd as (
+          select distinct Application_Name, User_Account
+          from Uam_Task
+          where Create_User = #{itOwner}
+            and Review_Result = 'Remove'
+            and create_date > #{startTime}
+        )
+        select * from (
+        select Application_Name,
+               User_Account,Incident_Number,
+               CONVERT(varchar(100), Create_Date, 23) as Create_Date,
+               ROW_NUMBER() over(partition by Application_Name,User_Account order by Create_Date desc) as Sequence,
+               count(1) total
+        from Uam_Task
+        where Create_User = #{itOwner}
+          and Review_Result = 'Remove'
+          and exists(select 1 from dd where dd.User_Account = Uam_Task.User_Account and dd.Application_Name=Uam_Task.Application_Name)
+        group by Application_Name, User_Account,Incident_Number,Create_Date
+
+        ) as ddc where ddc.Sequence = 1
+
+
+    </select>
+
+
+    <select id="selectCountPerApp" resultType="Map">
+        select Application_Name, count(1) total
+        from Uam_Task
+        where Create_User = #{itOwner}
+        and Create_Date > #{startTime}
+        group by Application_Name;
+    </select>
+
+
+
+</mapper>
+
+
+
+
+
+
+
+
+
+
+

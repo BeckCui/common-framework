@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dhl.fin.api.dao.uam.LineChartDataDao">
+  <resultMap id="BaseResultMap" type="com.dhl.fin.api.domain.LineChartData">
+    <id column="line_chart_data_id" property="id" />
+    <result column="line_chart_data_point_date" property="pointDate" />
+    <result column="line_chart_data_amount" property="amount" />
+    <result column="line_chart_data_data_code" property="dataCode" />
+    <result column="line_chart_data_data_desc" property="dataDesc" />
+    <result column="line_chart_data_remove" property="remove" />
+    <result column="line_chart_data_create_time" property="createTime" />
+    <result column="line_chart_data_update_time" property="updateTime" />
+    <result column="line_chart_data_create_user" property="createUser" />
+    <result column="line_chart_data_update_user" property="updateUser" />
+    <association javaType="com.dhl.fin.api.domain.LineChartData" property="parent">
+      <id column="line_chart_data_parent_id" property="id" />
+      <result column="parent_point_date" property="pointDate" />
+      <result column="parent_amount" property="amount" />
+      <result column="parent_data_code" property="dataCode" />
+      <result column="parent_data_desc" property="dataDesc" />
+      <result column="parent_remove" property="remove" />
+      <result column="parent_create_time" property="createTime" />
+      <result column="parent_update_time" property="updateTime" />
+      <result column="parent_create_user" property="createUser" />
+      <result column="parent_update_user" property="updateUser" />
+    </association>
+  </resultMap>
+  <sql id="Base_Column_List">
+    line_chart_data.id as line_chart_data_id,line_chart_data.create_time as line_chart_data_create_time,line_chart_data.create_user as line_chart_data_create_user,line_chart_data.remove as line_chart_data_remove,line_chart_data.update_time as line_chart_data_update_time,line_chart_data.update_user as line_chart_data_update_user,line_chart_data.amount as line_chart_data_amount,line_chart_data.data_code as line_chart_data_data_code,
+    line_chart_data.data_desc as line_chart_data_data_desc,line_chart_data.point_date as line_chart_data_point_date,line_chart_data.parent_id as line_chart_data_parent_id
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="domain.tableAlia == 'parent'">
+          ,parent.point_date as parent_point_date,parent.amount as parent_amount,parent.data_code as parent_data_code,parent.data_desc as parent_data_desc,parent.id as parent_id,parent.remove as parent_remove,parent.create_time as parent_create_time,parent.update_time as parent_update_time,parent.create_user as parent_create_user,parent.update_user as parent_update_user
+        </if>
+      </foreach>
+    </if>
+  </sql>
+  <sql id="select_sql">
+    select  <if test='selectOne'>top 1</if>
+    <include refid="Base_Column_List" />
+    from t_line_chart_data line_chart_data
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on line_chart_data.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on line_chart_data.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on line_chart_data.id=${domain.middleTable}_alis.line_chart_data_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where 1=1 
+    <if test="whereCondition != null">
+      <foreach collection="whereCondition" index="index" item="condition">
+        and ${condition}
+      </foreach>
+    </if>
+    <if test="orderCondition != null">
+      <trim prefix="order by" suffixOverrides=",">
+        <foreach collection="orderCondition" index="index" item="condition">
+           ${condition},
+        </foreach>
+      </trim>
+    </if>
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap">
+    select  <if test='selectOne'>top 1</if>
+    <include refid="Base_Column_List" />
+    from t_line_chart_data line_chart_data
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on line_chart_data.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on line_chart_data.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on line_chart_data.id=${domain.middleTable}_alis.line_chart_data_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where line_chart_data.id = #{id,jdbcType=BIGINT}
+  </select>
+  <select id="selectPageQuery" resultMap="BaseResultMap">
+    with dd as (select distinct ${orderFields} from t_line_chart_data line_chart_data 
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on line_chart_data.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on line_chart_data.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on line_chart_data.id=${domain.middleTable}_alis.line_chart_data_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where 1 = 1 
+    <if test="whereCondition != null">
+      <foreach collection="whereCondition" index="index" item="condition">
+        and ${condition}
+      </foreach>
+    </if>
+    <if test="orderCondition != null">
+      <trim prefix="order by" suffixOverrides=",">
+        <foreach collection="orderCondition" index="index" item="condition">
+           ${condition},
+        </foreach>
+      </trim>
+    </if>
+    offset ${startIndex} rows fetch next ${length} rows only)
+    select <include refid="Base_Column_List" />
+    from t_line_chart_data line_chart_data
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on line_chart_data.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on line_chart_data.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on line_chart_data.id=${domain.middleTable}_alis.line_chart_data_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where exists(select 1 from dd where dd.id = line_chart_data.id)
+    <if test="orderCondition != null">
+      <trim prefix="order by" suffixOverrides=",">
+        <foreach collection="orderCondition" index="index" item="condition">
+           ${condition},
+        </foreach>
+      </trim>
+    </if>
+  </select>
+  <select id="selectSelective" resultMap="BaseResultMap">
+    <include refid="select_sql" />
+  </select>
+  <select id="selectCount" resultType="java.lang.Integer">
+    select count(1) total from (
+    select  <if test='selectOne'>top 1</if>
+     distinct ${fields}
+    from t_line_chart_data line_chart_data
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on line_chart_data.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on line_chart_data.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on line_chart_data.id=${domain.middleTable}_alis.line_chart_data_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where 1=1 
+    <if test="whereCondition != null">
+      <foreach collection="whereCondition" index="index" item="condition">
+        and ${condition}
+      </foreach>
+    </if>
+    <if test="orderCondition != null">
+      <trim prefix="order by" suffixOverrides=",">
+        <foreach collection="orderCondition" index="index" item="condition">
+           ${condition},
+        </foreach>
+      </trim>
+    </if>
+    ) as s
+  </select>
+  <update id="deleteByPrimaryKey">
+      update t_line_chart_data set remove = 1 , update_time=#{updateTime} , update_user=#{updateUser} where id = #{id,jdbcType=BIGINT}
+  </update>
+  <insert id="insert" parameterType="com.dhl.fin.api.domain.LineChartData">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Long">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into t_line_chart_data (create_time, create_user, remove, 
+      update_time, update_user, amount, 
+      data_code, data_desc, point_date, 
+      parent_id)
+    values (#{createTime,jdbcType=TIMESTAMP}, #{createUser,jdbcType=VARCHAR}, #{remove,jdbcType=BIT}, 
+      #{updateTime,jdbcType=TIMESTAMP}, #{updateUser,jdbcType=VARCHAR}, #{amount,jdbcType=DOUBLE}, 
+      #{dataCode,jdbcType=VARCHAR}, #{dataDesc,jdbcType=VARCHAR}, #{pointDate,jdbcType=TIMESTAMP}, 
+    #{parent.id,jdbcType=BIGINT})
+  </insert>
+  <insert id="insertSelective" parameterType="com.dhl.fin.api.domain.LineChartData">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Long">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into t_line_chart_data
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="createTime != null">
+        create_time,
+      </if>
+      <if test="createUser != null">
+        create_user,
+      </if>
+      <if test="remove != null">
+        remove,
+      </if>
+      <if test="updateTime != null">
+        update_time,
+      </if>
+      <if test="updateUser != null">
+        update_user,
+      </if>
+      <if test="amount != null">
+        amount,
+      </if>
+      <if test="dataCode != null">
+        data_code,
+      </if>
+      <if test="dataDesc != null">
+        data_desc,
+      </if>
+      <if test="pointDate != null">
+        point_date,
+      </if>
+      <if test="parent != null and parent.id != null">
+        parent_id,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createUser != null">
+        #{createUser,jdbcType=VARCHAR},
+      </if>
+      <if test="remove != null">
+        #{remove,jdbcType=BIT},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateUser != null">
+        #{updateUser,jdbcType=VARCHAR},
+      </if>
+      <if test="amount != null">
+        #{amount,jdbcType=DOUBLE},
+      </if>
+      <if test="dataCode != null">
+        #{dataCode,jdbcType=VARCHAR},
+      </if>
+      <if test="dataDesc != null">
+        #{dataDesc,jdbcType=VARCHAR},
+      </if>
+      <if test="pointDate != null">
+        #{pointDate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="parent != null and parent.id != null">
+        #{parent.id,jdbcType=BIGINT},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective">
+    update t_line_chart_data
+    <set>
+      <if test="domain.createTime != null ">
+        create_time = #{domain.createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="domain.createUser != null ">
+        create_user = #{domain.createUser,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.remove != null ">
+        remove = #{domain.remove,jdbcType=BIT},
+      </if>
+      <if test="domain.updateTime != null ">
+        update_time = #{domain.updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="domain.updateUser != null ">
+        update_user = #{domain.updateUser,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.amount != null ">
+        amount = #{domain.amount,jdbcType=DOUBLE},
+      </if>
+      <if test="domain.dataCode != null ">
+        data_code = #{domain.dataCode,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.dataDesc != null ">
+        data_desc = #{domain.dataDesc,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.pointDate != null ">
+        point_date = #{domain.pointDate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="domain.parent != null  and domain.parent.id != null ">
+        parent_id = #{domain.parent.id,jdbcType=BIGINT},
+      </if>
+    </set>
+    <trim prefix="where" suffixOverrides="and">
+      <foreach collection="query.whereCondition" item="condition">
+         ${condition}
+      </foreach>
+    </trim>
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.dhl.fin.api.domain.LineChartData">
+    update t_line_chart_data
+    set create_time = #{createTime,jdbcType=TIMESTAMP},
+      create_user = #{createUser,jdbcType=VARCHAR},
+      remove = #{remove,jdbcType=BIT},
+      update_time = #{updateTime,jdbcType=TIMESTAMP},
+      update_user = #{updateUser,jdbcType=VARCHAR},
+      amount = #{amount,jdbcType=DOUBLE},
+      data_code = #{dataCode,jdbcType=VARCHAR},
+      data_desc = #{dataDesc,jdbcType=VARCHAR},
+      point_date = #{pointDate,jdbcType=TIMESTAMP},
+      parent_id = #{parent.id,jdbcType=BIGINT}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <select id="selectOne" resultMap="BaseResultMap">
+    <include refid="select_sql"/>
+  </select>
+</mapper>

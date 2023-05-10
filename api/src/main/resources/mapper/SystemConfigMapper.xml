@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dhl.fin.api.dao.finfin.SystemConfigDao">
+  <resultMap id="BaseResultMap" type="com.dhl.fin.api.domain.SystemConfig">
+    <id column="system_config_id" property="id" />
+    <result column="system_config_code" property="code" />
+    <result column="system_config_value" property="value" />
+    <result column="system_config_remark" property="remark" />
+    <result column="system_config_remove" property="remove" />
+    <result column="system_config_create_time" property="createTime" />
+    <result column="system_config_update_time" property="updateTime" />
+    <result column="system_config_create_user" property="createUser" />
+    <result column="system_config_update_user" property="updateUser" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    system_config.id as system_config_id,system_config.create_time as system_config_create_time,system_config.create_user as system_config_create_user,system_config.remove as system_config_remove,system_config.update_time as system_config_update_time,system_config.update_user as system_config_update_user,system_config.code as system_config_code,system_config.value as system_config_value,system_config.remark as system_config_remark
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain" />
+    </if>
+  </sql>
+  <sql id="select_sql">
+    select  <if test='selectOne'>top 1</if>
+    <include refid="Base_Column_List" />
+    from t_system_config system_config
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on system_config.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on system_config.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on system_config.id=${domain.middleTable}_alis.system_config_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where 1=1 
+    <if test="whereCondition != null">
+      <foreach collection="whereCondition" index="index" item="condition">
+        and ${condition}
+      </foreach>
+    </if>
+    <if test="orderCondition != null">
+      <trim prefix="order by" suffixOverrides=",">
+        <foreach collection="orderCondition" index="index" item="condition">
+           ${condition},
+        </foreach>
+      </trim>
+    </if>
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap">
+    select  <if test='selectOne'>top 1</if>
+    <include refid="Base_Column_List" />
+    from t_system_config system_config
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on system_config.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on system_config.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on system_config.id=${domain.middleTable}_alis.system_config_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where system_config.id = #{id,jdbcType=BIGINT}
+  </select>
+  <select id="selectPageQuery" resultMap="BaseResultMap">
+    with dd as (select distinct ${orderFields} from t_system_config system_config 
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on system_config.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on system_config.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on system_config.id=${domain.middleTable}_alis.system_config_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where 1 = 1 
+    <if test="whereCondition != null">
+      <foreach collection="whereCondition" index="index" item="condition">
+        and ${condition}
+      </foreach>
+    </if>
+    <if test="orderCondition != null">
+      <trim prefix="order by" suffixOverrides=",">
+        <foreach collection="orderCondition" index="index" item="condition">
+           ${condition},
+        </foreach>
+      </trim>
+    </if>
+    offset ${startIndex} rows fetch next ${length} rows only)
+    select <include refid="Base_Column_List" />
+    from t_system_config system_config
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on system_config.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on system_config.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on system_config.id=${domain.middleTable}_alis.system_config_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where exists(select 1 from dd where dd.id = system_config.id)
+    <if test="orderCondition != null">
+      <trim prefix="order by" suffixOverrides=",">
+        <foreach collection="orderCondition" index="index" item="condition">
+           ${condition},
+        </foreach>
+      </trim>
+    </if>
+  </select>
+  <select id="selectSelective" resultMap="BaseResultMap">
+    <include refid="select_sql" />
+  </select>
+  <select id="selectCount" resultType="java.lang.Integer">
+    select count(1) total from (
+    select  <if test='selectOne'>top 1</if>
+     distinct ${fields}
+    from t_system_config system_config
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on system_config.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on system_config.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on system_config.id=${domain.middleTable}_alis.system_config_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where 1=1 
+    <if test="whereCondition != null">
+      <foreach collection="whereCondition" index="index" item="condition">
+        and ${condition}
+      </foreach>
+    </if>
+    <if test="orderCondition != null">
+      <trim prefix="order by" suffixOverrides=",">
+        <foreach collection="orderCondition" index="index" item="condition">
+           ${condition},
+        </foreach>
+      </trim>
+    </if>
+    ) as s
+  </select>
+  <update id="deleteByPrimaryKey">
+      update t_system_config set remove = 1 , update_time=#{updateTime} , update_user=#{updateUser} where id = #{id,jdbcType=BIGINT}
+  </update>
+  <insert id="insert" parameterType="com.dhl.fin.api.domain.SystemConfig">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Long">
+       SELECT @@IDENTITY
+    </selectKey>
+    insert into t_system_config (create_time, create_user, remove, 
+      update_time, update_user, code, 
+      value, remark)
+    values (#{createTime,jdbcType=TIMESTAMP}, #{createUser,jdbcType=VARCHAR}, #{remove,jdbcType=BIT}, 
+      #{updateTime,jdbcType=TIMESTAMP}, #{updateUser,jdbcType=VARCHAR}, #{code,jdbcType=VARCHAR}, 
+      #{value,jdbcType=VARCHAR}, #{remark,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.dhl.fin.api.domain.SystemConfig">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Long">
+       SELECT @@IDENTITY
+    </selectKey>
+    insert into t_system_config
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="createTime != null">
+        create_time,
+      </if>
+      <if test="createUser != null">
+        create_user,
+      </if>
+      <if test="remove != null">
+        remove,
+      </if>
+      <if test="updateTime != null">
+        update_time,
+      </if>
+      <if test="updateUser != null">
+        update_user,
+      </if>
+      <if test="code != null">
+        code,
+      </if>
+      <if test="value != null">
+        value,
+      </if>
+      <if test="remark != null">
+        remark,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createUser != null">
+        #{createUser,jdbcType=VARCHAR},
+      </if>
+      <if test="remove != null">
+        #{remove,jdbcType=BIT},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateUser != null">
+        #{updateUser,jdbcType=VARCHAR},
+      </if>
+      <if test="code != null">
+        #{code,jdbcType=VARCHAR},
+      </if>
+      <if test="value != null">
+        #{value,jdbcType=VARCHAR},
+      </if>
+      <if test="remark != null">
+        #{remark,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective">
+    update t_system_config
+    <set>
+      <if test="domain.createTime != null ">
+        create_time = #{domain.createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="domain.createUser != null ">
+        create_user = #{domain.createUser,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.remove != null ">
+        remove = #{domain.remove,jdbcType=BIT},
+      </if>
+      <if test="domain.updateTime != null ">
+        update_time = #{domain.updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="domain.updateUser != null ">
+        update_user = #{domain.updateUser,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.code != null ">
+        code = #{domain.code,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.value != null ">
+        value = #{domain.value,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.remark != null ">
+        remark = #{domain.remark,jdbcType=VARCHAR},
+      </if>
+    </set>
+    <trim prefix="where" suffixOverrides="and">
+      <foreach collection="query.whereCondition" item="condition">
+         ${condition}
+      </foreach>
+    </trim>
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.dhl.fin.api.domain.SystemConfig">
+    update t_system_config
+    set create_time = #{createTime,jdbcType=TIMESTAMP},
+      create_user = #{createUser,jdbcType=VARCHAR},
+      remove = #{remove,jdbcType=BIT},
+      update_time = #{updateTime,jdbcType=TIMESTAMP},
+      update_user = #{updateUser,jdbcType=VARCHAR},
+      code = #{code,jdbcType=VARCHAR},
+      value = #{value,jdbcType=VARCHAR},
+      remark = #{remark,jdbcType=VARCHAR}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <select id="selectOne" resultMap="BaseResultMap">
+    <include refid="select_sql"/>
+  </select>
+</mapper>

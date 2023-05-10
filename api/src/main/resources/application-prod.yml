@@ -1,0 +1,33 @@
+spring:
+  datasource:
+    pdtp:
+      jdbcUrl: jdbc:sqlserver://db.dev.vat.cn.dhl.com:1433;Database=wshwriteoff;integratedSecurity=true;characterEncoding=UTF-8
+      driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+
+
+  redis:
+    password: ENC(8qlyQgEYMmtQk28Ebyu1ahRhZ07u93I/E94xgEab1GNFJMZC64agPU8XpTGWgLUv+w2ekn2bJwHSOSIViFTjBA==)
+    timeout: 50000
+    cluster:
+      nodes:
+        - 23.156.6.167:7001
+        - 23.156.6.168:7001
+        - 23.156.6.169:7001
+        - 23.156.6.167:7002
+        - 23.156.6.168:7002
+        - 23.156.6.169:7002
+
+
+jasypt:
+  encryptor:
+    password: ${FINTP_ENCYPTOR_PASSWORD}
+
+custom:
+  uploadPath: D:/CMDB/uploadFile
+  uamWorkDir: \\\\199.40.10.32\\it_data$\\FAA Team\\Share\\Todo\\30-UAM\\2022Q2
+
+logback:
+  dir: D:/CMDB/logs
+
+
+

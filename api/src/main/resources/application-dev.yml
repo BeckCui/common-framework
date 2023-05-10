@@ -1,0 +1,21 @@
+spring:
+  datasource:
+    pdtp:
+      jdbcUrl: jdbc:mysql://localhost:3306/stock?characterEncoding=utf8&allowMultiQueries=true&serverTimezone=UTC
+      username: root
+      password: Cui734370179
+      driver-class-name: com.mysql.cj.jdbc.Driver
+
+jasypt:
+  encryptor:
+    password: EbfYkitulv73I2p0mXI50JMXoaxZTKJ7
+
+
+custom:
+  uploadPath: C:/uploadFile/pdtp
+
+logback:
+  dir: C:/logs/pdtp
+
+
+

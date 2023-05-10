@@ -1,0 +1,371 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dhl.fin.api.dao.finRoleDao">
+  <resultMap id="BaseResultMap" type="com.dhl.fin.api.domain.Role">
+    <id column="role_id" property="id" />
+    <result column="role_name" property="name" />
+    <result column="role_code" property="code" />
+    <result column="role_remove" property="remove" />
+    <result column="role_create_time" property="createTime" />
+    <result column="role_update_time" property="updateTime" />
+    <result column="role_create_user" property="createUser" />
+    <result column="role_update_user" property="updateUser" />
+    <association javaType="com.dhl.fin.api.domain.Project" property="project">
+      <id column="role_project_id" property="id" />
+      <result column="project_name" property="name" />
+      <result column="project_en_name" property="enName" />
+      <result column="project_code" property="code" />
+      <result column="project_remove" property="remove" />
+      <result column="project_create_time" property="createTime" />
+      <result column="project_update_time" property="updateTime" />
+      <result column="project_create_user" property="createUser" />
+      <result column="project_update_user" property="updateUser" />
+    </association>
+    <collection ofType="com.dhl.fin.api.domain.Tree" property="trees">
+      <id column="trees_id" property="id" />
+      <result column="trees_title" property="title" />
+      <result column="trees_code" property="code" />
+      <result column="trees_order_num" property="orderNum" />
+      <result column="trees_leaf" property="leaf" />
+      <result column="trees_parent_line" property="parentLine" />
+      <result column="trees_remove" property="remove" />
+      <result column="trees_create_time" property="createTime" />
+      <result column="trees_update_time" property="updateTime" />
+      <result column="trees_create_user" property="createUser" />
+      <result column="trees_update_user" property="updateUser" />
+    </collection>
+    <collection ofType="com.dhl.fin.api.domain.Tree" property="dataPerTrees">
+      <id column="data_per_trees_id" property="id" />
+      <result column="data_per_trees_title" property="title" />
+      <result column="data_per_trees_code" property="code" />
+      <result column="data_per_trees_order_num" property="orderNum" />
+      <result column="data_per_trees_leaf" property="leaf" />
+      <result column="data_per_trees_parent_line" property="parentLine" />
+      <result column="data_per_trees_remove" property="remove" />
+      <result column="data_per_trees_create_time" property="createTime" />
+      <result column="data_per_trees_update_time" property="updateTime" />
+      <result column="data_per_trees_create_user" property="createUser" />
+      <result column="data_per_trees_update_user" property="updateUser" />
+    </collection>
+    <collection ofType="com.dhl.fin.api.domain.Account" property="accounts">
+      <id column="accounts_id" property="id" />
+      <result column="accounts_uuid" property="uuid" />
+      <result column="accounts_user_no" property="userNo" />
+      <result column="accounts_name" property="name" />
+      <result column="accounts_email" property="email" />
+      <result column="accounts_available" property="available" />
+      <result column="accounts_is_super_manager" property="isSuperManager" />
+      <result column="accounts_remove" property="remove" />
+      <result column="accounts_create_time" property="createTime" />
+      <result column="accounts_update_time" property="updateTime" />
+      <result column="accounts_create_user" property="createUser" />
+      <result column="accounts_update_user" property="updateUser" />
+    </collection>
+  </resultMap>
+  <sql id="Base_Column_List">
+    role.id as role_id,role.create_time as role_create_time,role.create_user as role_create_user,role.remove as role_remove,role.update_time as role_update_time,role.update_user as role_update_user,role.code as role_code,role.name as role_name,role.project_id as role_project_id
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="domain.tableAlia == 'project'">
+          ,project.name as project_name,project.en_name as project_en_name,project.code as project_code,project.id as project_id,project.remove as project_remove,project.create_time as project_create_time,project.update_time as project_update_time,project.create_user as project_create_user,project.update_user as project_update_user
+        </if>
+        <if test="domain.tableAlia == 'trees'">
+          ,trees.title as trees_title,trees.code as trees_code,trees.order_num as trees_order_num,trees.leaf as trees_leaf,trees.parent_line as trees_parent_line,trees.id as trees_id,trees.remove as trees_remove,trees.create_time as trees_create_time,trees.update_time as trees_update_time,trees.create_user as trees_create_user,trees.update_user as trees_update_user
+        </if>
+        <if test="domain.tableAlia == 'data_per_trees'">
+          ,data_per_trees.title as data_per_trees_title,data_per_trees.code as data_per_trees_code,data_per_trees.order_num as data_per_trees_order_num,data_per_trees.leaf as data_per_trees_leaf,data_per_trees.parent_line as data_per_trees_parent_line,data_per_trees.id as data_per_trees_id,data_per_trees.remove as data_per_trees_remove,data_per_trees.create_time as data_per_trees_create_time,data_per_trees.update_time as data_per_trees_update_time,data_per_trees.create_user as data_per_trees_create_user,data_per_trees.update_user as data_per_trees_update_user
+        </if>
+        <if test="domain.tableAlia == 'accounts'">
+          ,accounts.uuid as accounts_uuid,accounts.user_no as accounts_user_no,accounts.name as accounts_name,accounts.email as accounts_email,accounts.available as accounts_available,accounts.is_super_manager as accounts_is_super_manager,accounts.id as accounts_id,accounts.remove as accounts_remove,accounts.create_time as accounts_create_time,accounts.update_time as accounts_update_time,accounts.create_user as accounts_create_user,accounts.update_user as accounts_update_user
+        </if>
+      </foreach>
+    </if>
+  </sql>
+  <sql id="select_sql">
+    select  <if test='selectOne'>top 1</if>
+    <include refid="Base_Column_List" />
+    from t_role role
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on role.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on role.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on role.id=${domain.middleTable}_alis.role_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where 1=1 
+    <if test="whereCondition != null">
+      <foreach collection="whereCondition" index="index" item="condition">
+        and ${condition}
+      </foreach>
+    </if>
+    <if test="orderCondition != null">
+      <trim prefix="order by" suffixOverrides=",">
+        <foreach collection="orderCondition" index="index" item="condition">
+           ${condition},
+        </foreach>
+      </trim>
+    </if>
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap">
+    select  <if test='selectOne'>top 1</if>
+    <include refid="Base_Column_List" />
+    from t_role role
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on role.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on role.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on role.id=${domain.middleTable}_alis.role_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where role.id = #{id,jdbcType=BIGINT}
+  </select>
+  <select id="selectPageQuery" resultMap="BaseResultMap">
+    with dd as (select distinct ${orderFields} from t_role role 
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on role.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on role.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on role.id=${domain.middleTable}_alis.role_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where 1 = 1 
+    <if test="whereCondition != null">
+      <foreach collection="whereCondition" index="index" item="condition">
+        and ${condition}
+      </foreach>
+    </if>
+    <if test="orderCondition != null">
+      <trim prefix="order by" suffixOverrides=",">
+        <foreach collection="orderCondition" index="index" item="condition">
+           ${condition},
+        </foreach>
+      </trim>
+    </if>
+    offset ${startIndex} rows fetch next ${length} rows only)
+    select <include refid="Base_Column_List" />
+    from t_role role
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on role.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on role.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on role.id=${domain.middleTable}_alis.role_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where exists(select 1 from dd where dd.id = role.id)
+    <if test="orderCondition != null">
+      <trim prefix="order by" suffixOverrides=",">
+        <foreach collection="orderCondition" index="index" item="condition">
+           ${condition},
+        </foreach>
+      </trim>
+    </if>
+  </select>
+  <select id="selectSelective" resultMap="BaseResultMap">
+    <include refid="select_sql" />
+  </select>
+  <select id="selectCount" resultType="java.lang.Integer">
+    select count(1) total from (
+    select  <if test='selectOne'>top 1</if>
+     distinct ${fields}
+    from t_role role
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on role.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on role.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on role.id=${domain.middleTable}_alis.role_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where 1=1 
+    <if test="whereCondition != null">
+      <foreach collection="whereCondition" index="index" item="condition">
+        and ${condition}
+      </foreach>
+    </if>
+    <if test="orderCondition != null">
+      <trim prefix="order by" suffixOverrides=",">
+        <foreach collection="orderCondition" index="index" item="condition">
+           ${condition},
+        </foreach>
+      </trim>
+    </if>
+    ) as s
+  </select>
+  <update id="deleteByPrimaryKey">
+      update t_role set remove = 1 , update_time=#{updateTime} , update_user=#{updateUser} where id = #{id,jdbcType=BIGINT}
+  </update>
+  <insert id="insert" parameterType="com.dhl.fin.api.domain.Role">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Long">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into t_role (create_time, create_user, remove, 
+      update_time, update_user, code, 
+      name, project_id)
+    values (#{createTime,jdbcType=TIMESTAMP}, #{createUser,jdbcType=VARCHAR}, #{remove,jdbcType=BIT}, 
+      #{updateTime,jdbcType=TIMESTAMP}, #{updateUser,jdbcType=VARCHAR}, #{code,jdbcType=VARCHAR}, 
+    #{name,jdbcType=VARCHAR},#{project.id,jdbcType=BIGINT})
+  </insert>
+  <insert id="insertSelective" parameterType="com.dhl.fin.api.domain.Role">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Long">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into t_role
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="createTime != null">
+        create_time,
+      </if>
+      <if test="createUser != null">
+        create_user,
+      </if>
+      <if test="remove != null">
+        remove,
+      </if>
+      <if test="updateTime != null">
+        update_time,
+      </if>
+      <if test="updateUser != null">
+        update_user,
+      </if>
+      <if test="code != null">
+        code,
+      </if>
+      <if test="name != null">
+        name,
+      </if>
+      <if test="project != null and project.id != null">
+        project_id,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createUser != null">
+        #{createUser,jdbcType=VARCHAR},
+      </if>
+      <if test="remove != null">
+        #{remove,jdbcType=BIT},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateUser != null">
+        #{updateUser,jdbcType=VARCHAR},
+      </if>
+      <if test="code != null">
+        #{code,jdbcType=VARCHAR},
+      </if>
+      <if test="name != null">
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="project != null and project.id != null">
+        #{project.id,jdbcType=BIGINT},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective">
+    update t_role
+    <set>
+      <if test="domain.createTime != null ">
+        create_time = #{domain.createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="domain.createUser != null ">
+        create_user = #{domain.createUser,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.remove != null ">
+        remove = #{domain.remove,jdbcType=BIT},
+      </if>
+      <if test="domain.updateTime != null ">
+        update_time = #{domain.updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="domain.updateUser != null ">
+        update_user = #{domain.updateUser,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.code != null ">
+        code = #{domain.code,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.name != null ">
+        name = #{domain.name,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.project != null  and domain.project.id != null ">
+        project_id = #{domain.project.id,jdbcType=BIGINT},
+      </if>
+    </set>
+    <trim prefix="where" suffixOverrides="and">
+      <foreach collection="query.whereCondition" item="condition">
+         ${condition}
+      </foreach>
+    </trim>
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.dhl.fin.api.domain.Role">
+    update t_role
+    set create_time = #{createTime,jdbcType=TIMESTAMP},
+      create_user = #{createUser,jdbcType=VARCHAR},
+      remove = #{remove,jdbcType=BIT},
+      update_time = #{updateTime,jdbcType=TIMESTAMP},
+      update_user = #{updateUser,jdbcType=VARCHAR},
+      code = #{code,jdbcType=VARCHAR},
+      name = #{name,jdbcType=VARCHAR},
+      project_id = #{project.id,jdbcType=BIGINT}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <insert id="insertRoleTrees">
+    insert into t_role_tree(role_id,tree_id) values(#{roleId},#{treeId})
+  </insert>
+  <delete id="deleteRoleTrees">
+    delete from t_role_tree where role_id=#{roleId} and tree_id=#{treeId};
+  </delete>
+  <delete id="deleteRoleTreesMiddle">
+    delete from t_role_tree where role_id=#{roleId}
+  </delete>
+  <insert id="insertRoleDataPerTrees">
+    insert into t_role_dataper_tree(role_id,tree_id) values(#{roleId},#{treeId})
+  </insert>
+  <delete id="deleteRoleDataPerTrees">
+    delete from t_role_dataper_tree where role_id=#{roleId} and tree_id=#{treeId};
+  </delete>
+  <delete id="deleteRoleDataPerTreesMiddle">
+    delete from t_role_dataper_tree where role_id=#{roleId}
+  </delete>
+  <insert id="insertRoleAccounts">
+    insert into t_account_role(role_id,account_id) values(#{roleId},#{accountId})
+  </insert>
+  <delete id="deleteRoleAccounts">
+    delete from t_account_role where role_id=#{roleId} and account_id=#{accountId};
+  </delete>
+  <delete id="deleteRoleAccountsMiddle">
+    delete from t_account_role where role_id=#{roleId}
+  </delete>
+  <select id="selectOne" resultMap="BaseResultMap">
+    <include refid="select_sql"/>
+  </select>
+</mapper>

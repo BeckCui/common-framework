@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration
+        PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+        "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+<generatorConfiguration>
+    <context id="default" targetRuntime="com.dhl.fin.api.common.mybatisgenerator.DhlMyBatisImpl">
+        <plugin type="com.dhl.fin.api.common.mybatisgenerator.DhlMybatisPlugin"></plugin>
+        <commentGenerator>
+            <property name="suppressDate" value="true"/>
+            <!-- 是否去除自动生成的注释 true：是 ： false:否 -->
+            <property name="suppressAllComments" value="true"/>
+        </commentGenerator>
+        <jdbcConnection driverClass="com.mysql.jdbc.Driver"
+                        userId="root"
+                        password="Cui734370179"
+                        connectionURL="jdbc:mysql://localhost:3306/stock?characterEncoding=utf8&amp;allowMultiQueries=true&amp;serverTimezone=UTC">
+        </jdbcConnection>
+        <javaTypeResolver>
+            <!-- 默认情况下数据库中的 decimal，bigInt 在 Java 对应是 sql 下的 BigDecimal 类 -->
+            <property name="forceBigDecimals" value="false"/>
+        </javaTypeResolver>
+        <!-- 生成的entity类 -->
+        <javaModelGenerator targetPackage="com.dhl.fin.api.dao.entity"
+                            targetProject="src/main/java"></javaModelGenerator>
+        <!-- 生成的 mapper 文件 -->
+        <sqlMapGenerator targetPackage="mapper"
+                         targetProject="src/main/resources">
+            <!-- 针对数据库的一个配置，是否把 schema 作为字包名 -->
+            <property name="enableSubPackages" value="false"/>
+        </sqlMapGenerator>
+        <!--生成的 DAO 文件 -->
+        <javaClientGenerator type="XMLMAPPER"
+                             targetPackage="com.dhl.fin.api.dao"
+                             targetProject="src/main/java">
+            <!-- 针对 oracle 数据库的一个配置，是否把 schema 作为字包名 -->
+            <property name="enableSubPackages" value="false"/>
+        </javaClientGenerator>
+
+        <!--
+
+                <table tableName="t_project" domainObjectName="Project"
+                       enableCountByExample="false" enableUpdateByExample="false"
+                       enableDeleteByExample="false" enableSelectByExample="false"
+                       selectByExampleQueryId="false">
+                    <generatedKey column="id" sqlStatement="Mysql" identity="true"/>
+                </table>
+                <table tableName="t_account" domainObjectName="Account"
+                       enableCountByExample="false" enableUpdateByExample="false"
+                       enableDeleteByExample="false" enableSelectByExample="false"
+                       selectByExampleQueryId="false">
+                    <generatedKey column="id" sqlStatement="Mysql" identity="true"/>
+                </table>
+                <table tableName="t_menu" domainObjectName="Menu"
+                       enableCountByExample="false" enableUpdateByExample="false"
+                       enableDeleteByExample="false" enableSelectByExample="false"
+                       selectByExampleQueryId="false">
+                    <generatedKey column="id" sqlStatement="Mysql" identity="true"/>
+                </table>
+                <table tableName="t_role" domainObjectName="Role"
+                       enableCountByExample="false" enableUpdateByExample="false"
+                       enableDeleteByExample="false" enableSelectByExample="false"
+                       selectByExampleQueryId="false">
+                    <generatedKey column="id" sqlStatement="Mysql" identity="true"/>
+                </table>
+
+                <table tableName="t_tree" domainObjectName="Tree"
+                       enableCountByExample="false" enableUpdateByExample="false"
+                       enableDeleteByExample="false" enableSelectByExample="false"
+                       selectByExampleQueryId="false">
+                    <generatedKey column="id" sqlStatement="Mysql" identity="true"/>
+                </table>
+
+                <table tableName="t_org_name" domainObjectName="OrgName"
+                       enableCountByExample="false" enableUpdateByExample="false"
+                       enableDeleteByExample="false" enableSelectByExample="false"
+                       selectByExampleQueryId="false">
+                    <generatedKey column="id" sqlStatement="Mysql" identity="true"/>
+                </table>
+
+                <table tableName="t_product_name" domainObjectName="ProductName"
+                       enableCountByExample="false" enableUpdateByExample="false"
+                       enableDeleteByExample="false" enableSelectByExample="false"
+                       selectByExampleQueryId="false">
+                    <generatedKey column="id" sqlStatement="Mysql" identity="true"/>
+                </table>
+                <table tableName="t_action" domainObjectName="Action"
+                       enableCountByExample="false" enableUpdateByExample="false"
+                       enableDeleteByExample="false" enableSelectByExample="false"
+                       selectByExampleQueryId="false">
+                    <generatedKey column="id" sqlStatement="Mysql" identity="true"/>
+                </table>
+                <table tableName="t_data_per" domainObjectName="DataPer"
+                       enableCountByExample="false" enableUpdateByExample="false"
+                       enableDeleteByExample="false" enableSelectByExample="false"
+                       selectByExampleQueryId="false">
+                    <generatedKey column="id" sqlStatement="Mysql" identity="true"/>
+                </table>
+                <table tableName="t_dictionary" domainObjectName="Dictionary"
+                       enableCountByExample="false" enableUpdateByExample="false"
+                       enableDeleteByExample="false" enableSelectByExample="false"
+                       selectByExampleQueryId="false">
+                    <generatedKey column="id" sqlStatement="Mysql" identity="true"/>
+                </table>
+                <table tableName="t_stock" domainObjectName="Stock"
+                       enableCountByExample="false" enableUpdateByExample="false"
+                       enableDeleteByExample="false" enableSelectByExample="false"
+                       selectByExampleQueryId="false">
+                    <generatedKey column="id" sqlStatement="Mysql" identity="true"/>
+                </table>
+                <table tableName="t_stock_v" domainObjectName="StockV"
+                       enableCountByExample="false" enableUpdateByExample="false"
+                       enableDeleteByExample="false" enableSelectByExample="false"
+                       selectByExampleQueryId="false">
+                    <generatedKey column="id" sqlStatement="Mysql" identity="true"/>
+                </table>
+        -->
+        <table tableName="t_line_chart_data" domainObjectName="LineChartData"
+               enableCountByExample="false" enableUpdateByExample="false"
+               enableDeleteByExample="false" enableSelectByExample="false"
+               selectByExampleQueryId="false">
+            <generatedKey column="id" sqlStatement="Mysql" identity="true"/>
+        </table>
+
+    </context>
+</generatorConfiguration>
+

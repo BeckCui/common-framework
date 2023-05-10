@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dhl.fin.api.dao.finuam.AssistantDao">
+
+
+    <select id="getAutoSendStats" resultType="String">
+         select [value] isAuto from t_system_config where code='openAutoSend'
+    </select>
+
+    <select id="archiveTotal" resultType="Map">
+        select (
+         select count(1)
+         from Uam_Task
+         where Create_User = #{itOwner}
+           and Create_Date > #{startTime}
+           and Task_Status = 4
+       ) archiveTotal
+         , (
+         select count(1)
+         from Uam_Task
+         where Create_User = #{itOwner}
+           and Create_Date > #{startTime}
+       ) total
+    </select>
+
+
+    <select id="genericAccountView" resultType="Map">
+        select distinct applicationName,userAccount from Generic_Account
+        where create_user= #{itOwner}
+    </select>
+
+    <select id="unRemoveView" resultType="Map">
+
+        select distinct applicationName, userAccount,c.Create_User createUser,c.Operation_Result reviewResult
+        from dbo.LeaveDHL_HRVG_unRemove a
+                 left join dbo.Uam_Task b on a.applicationName = b.Application_Name and a.userAccount = b.User_Account
+                 left join dbo.Uam_Task_Log c
+                           on c.Uam_Task_Id = b.id and c.Operation_Result = b.Review_Result
+        where a.create_user = #{itOwner}
+          and b.Create_Date > #{startTime}
+          and c.Create_Date > b.Create_Date
+
+    </select>
+
+    <select id="keepChangeView" resultType="Map">
+        select distinct applicationName,userAccount from LeaveDHL_HRVG_KeepChange
+        where create_user= #{itOwner}
+    </select>
+
+    <select id="allRemoveAcct" resultType="Map">
+        select Application_Name applicationName,
+               User_Account     userAccount,
+               User_Email       email,
+               Review_Result    reviewResult,
+               Incident_Number  remark,
+               b.Create_User    createUser
+        from dbo.Uam_Task a
+                 left join dbo.Uam_Task_Log b on a.id = b.Uam_Task_Id and b.Operation_Result = 'Remove'
+        where Review_Result='Remove'
+          and a.Create_User = #{itOwner}
+          and a.Create_Date > #{startTime}
+
+    </select>
+
+    <select id="lastQuarterRemoveView" resultType="Map">
+        select distinct a.applicationName, a.userAccount, c.Create_User createUser,c.Operation_Result reviewResult
+        from dbo.LastQUR_Remove a
+                 left join dbo.Uam_Task b on a.applicationName = b.Application_Name and a.userAccount = b.User_Account
+                 left join dbo.Uam_Task_Log c on c.Uam_Task_Id=b.Id and c.Operation_Result = b.Review_Result
+        where a.Create_User = #{itOwner}
+          and b.Create_Date > #{startTime}
+          and c.Create_Date > b.Create_Date
+          and c.Status = 1
+    </select>
+
+
+    <select id="reviewOwner" resultType="Map">
+
+      
+        with logTable as (select Uam_Quarterly_Task_Id,
+                                 Uam_Task_Id,
+                                 Operation_Result,
+                                 Create_Date,
+                                 Create_User,
+                                 row_number() over (partition by Uam_Task_Id order by Create_Date desc ) indexNum
+                          from dbo.Uam_Task_Log
+                          where Create_Date > #{startTime}
+                          and Operation_Result is not null
+                          and Operation_Result != ''
+                          group by Uam_Task_Id, Operation_Result, Uam_Quarterly_Task_Id, Create_Date, Create_User)
+        select
+            b.Application_Name applicationName,
+            a.Uam_Task_Id,
+               c.User_Account     userAccount,
+               a.Create_User      createUser,
+               a.indexNum,
+               a.Operation_Result reviewResult
+        from logTable a
+                 left join dbo.Uam_Quarterly_Task b on b.Id = a.Uam_Quarterly_Task_Id
+                 left join dbo.Uam_Task c on a.Uam_Task_Id = c.Id
+        where
+             a.indexNum = 1
+          and b.Create_Date > #{startTime}
+          and c.Create_User = #{itOwner}
+          and c.User_Account = a.Create_User
+
+
+    </select>
+
+    <select id="shouldRemoveByMe" resultType="Map">
+        select Application_Name applicationName, User_Account   userAccount, User_Email email, Review_Result    reviewResult, [Desc] description, b.Create_User createUser
+        from dbo.Uam_Task a
+                 left join dbo.Uam_Task_Log b on a.id = b.Uam_Task_Id and b.Operation_Result = a.Review_Result
+        where [Desc] like N'%并提BCA从系统中删除%'
+          and a.Create_User = #{itOwner}
+          and a.Create_Date > #{startTime}
+        union all
+        select Application_Name applicationName, User_Account userAccount, User_Email email, Review_Result reviewResult, [Desc] description, b.Create_User createUser
+        from dbo.Uam_Task a
+                 left join dbo.Uam_Task_Log b on a.id = b.Uam_Task_Id and b.Operation_Result = a.Review_Result
+        where [Desc] = N'AD系统里没有找到此账号'
+          and a.Create_User = #{itOwner}
+          and a.Create_Date > #{startTime}
+        union all
+        select Application_Name applicationName, User_Account userAccount, User_Email email, Review_Result reviewResult, [Desc] description, b.Create_User createUser
+        from dbo.Uam_Task a
+                 left join dbo.Uam_Task_Log b on a.id = b.Uam_Task_Id and b.Operation_Result = a.Review_Result
+        where [Desc] = N'AD账号被禁用'
+          and a.Create_User = #{itOwner}
+          and a.Create_Date > #{startTime}
+
+    </select>
+
+
+</mapper>
+
+
+
+
+
+
+
+
+
+
+

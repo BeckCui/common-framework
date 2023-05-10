@@ -1,0 +1,41 @@
+server:
+  ssl:
+    key-store: file:D:\PDTP\tls\pdtp.dev.cn.dhl.com.p12
+    key-store-type: PKCS12
+    key-store-password: ENC(Cwxvkz9O45y7Sqa5GvWQNNGVVdU8xtm3uFyWOihLhlMwoHgxw0F8kVTzf/I8fGvl)
+    enabled-protocols: TLSv1.2,TLSv1.3 #也可以配置 all –SSLv2 –SSLv3 –TLSv1.0 -TLSv1.1
+
+spring:
+  datasource:
+    pdtp:
+      jdbcUrl: jdbc:sqlserver://db.dev.vat.cn.dhl.com:1433;Database=wshwriteoff;integratedSecurity=true;characterEncoding=UTF-8
+      driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+
+
+
+  redis:
+    password: ENC(SAs7TjCrFML9DCyYXtqV5h+cQcfIZRvCfoyQqRpL/LnxBUJx8mKtJ0SOUqAmsgt2yEBO2tQKCDxuJgoEBTUDIw==)
+    timeout: 50000
+    cluster:
+      nodes:
+        - 23.156.6.44:7001
+        - 23.156.6.44:7002
+        - 23.156.6.44:7003
+        - 23.156.6.44:7004
+        - 23.156.6.44:7005
+        - 23.156.6.44:7006
+
+jasypt:
+  encryptor:
+    password: EbfYkitulv73I2p0mXI50JMXoaxZTKJ7
+
+
+custom:
+  uploadPath: D:/PDTP/uploadFile
+  uamWorkDir: \\\\199.40.10.32\\it_data$\\FAA Team\\Share\\Todo\\30-UAM\\2022Q2
+
+logback:
+  dir: D:/PDTP/log
+
+
+

@@ -1,0 +1,516 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dhl.fin.api.dao.finStockDao">
+  <resultMap id="BaseResultMap" type="com.dhl.fin.api.domain.Stock">
+    <id column="stock_id" property="id" />
+    <result column="stock_code" property="code" />
+    <result column="stock_name" property="name" />
+    <result column="stock_price" property="price" />
+    <result column="stock_total_market_value" property="totalMarketValue" />
+    <result column="stock_total_stock" property="totalStock" />
+    <result column="stock_float_market_value" property="floatMarketValue" />
+    <result column="stock_float_stock" property="floatStock" />
+    <result column="stock_pe" property="pe" />
+    <result column="stock_pb" property="pb" />
+    <result column="stock_eps" property="eps" />
+    <result column="stock_aps" property="aps" />
+    <result column="stock_trade" property="trade" />
+    <result column="stock_stock_per_person" property="stockPerPerson" />
+    <result column="stock_total_income" property="totalIncome" />
+    <result column="stock_total_income_ratio" property="totalIncomeRatio" />
+    <result column="stock_profit" property="profit" />
+    <result column="stock_profit_ratio" property="profitRatio" />
+    <result column="stock_total_assets" property="totalAssets" />
+    <result column="stock_total_debt" property="totalDebt" />
+    <result column="stock_dar" property="dar" />
+    <result column="stock_holder_value" property="holderValue" />
+    <result column="stock_holder_ratio" property="holderRatio" />
+    <result column="stock_date" property="date" />
+    <result column="stock_remove" property="remove" />
+    <result column="stock_create_time" property="createTime" />
+    <result column="stock_update_time" property="updateTime" />
+    <result column="stock_create_user" property="createUser" />
+    <result column="stock_update_user" property="updateUser" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    stock.id as stock_id,stock.create_time as stock_create_time,stock.create_user as stock_create_user,stock.remove as stock_remove,stock.update_time as stock_update_time,stock.update_user as stock_update_user,stock.aps as stock_aps,stock.code as stock_code,stock.dar as stock_dar,stock.date as stock_date,
+    stock.eps as stock_eps,stock.float_market_value as stock_float_market_value,stock.float_stock as stock_float_stock,stock.holder_ratio as stock_holder_ratio,stock.holder_value as stock_holder_value,stock.name as stock_name,stock.pb as stock_pb,stock.pe as stock_pe,stock.price as stock_price,
+    stock.profit as stock_profit,stock.profit_ratio as stock_profit_ratio,stock.stock_per_person as stock_stock_per_person,stock.total_assets as stock_total_assets,stock.total_debt as stock_total_debt,stock.total_income as stock_total_income,stock.total_income_ratio as stock_total_income_ratio,
+    stock.total_market_value as stock_total_market_value,stock.total_stock as stock_total_stock,stock.trade as stock_trade
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain" />
+    </if>
+  </sql>
+  <sql id="select_sql">
+    select  <if test='selectOne'>top 1</if>
+    <include refid="Base_Column_List" />
+    from t_stock stock
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on stock.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on stock.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on stock.id=${domain.middleTable}_alis.stock_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where 1=1 
+    <if test="whereCondition != null">
+      <foreach collection="whereCondition" index="index" item="condition">
+        and ${condition}
+      </foreach>
+    </if>
+    <if test="orderCondition != null">
+      <trim prefix="order by" suffixOverrides=",">
+        <foreach collection="orderCondition" index="index" item="condition">
+           ${condition},
+        </foreach>
+      </trim>
+    </if>
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap">
+    select  <if test='selectOne'>top 1</if>
+    <include refid="Base_Column_List" />
+    from t_stock stock
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on stock.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on stock.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on stock.id=${domain.middleTable}_alis.stock_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where stock.id = #{id,jdbcType=BIGINT}
+  </select>
+  <select id="selectPageQuery" resultMap="BaseResultMap">
+    with dd as (select distinct ${orderFields} from t_stock stock 
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on stock.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on stock.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on stock.id=${domain.middleTable}_alis.stock_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where 1 = 1 
+    <if test="whereCondition != null">
+      <foreach collection="whereCondition" index="index" item="condition">
+        and ${condition}
+      </foreach>
+    </if>
+    <if test="orderCondition != null">
+      <trim prefix="order by" suffixOverrides=",">
+        <foreach collection="orderCondition" index="index" item="condition">
+           ${condition},
+        </foreach>
+      </trim>
+    </if>
+    offset ${startIndex} rows fetch next ${length} rows only)
+    select <include refid="Base_Column_List" />
+    from t_stock stock
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on stock.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on stock.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on stock.id=${domain.middleTable}_alis.stock_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where exists(select 1 from dd where dd.id = stock.id)
+    <if test="orderCondition != null">
+      <trim prefix="order by" suffixOverrides=",">
+        <foreach collection="orderCondition" index="index" item="condition">
+           ${condition},
+        </foreach>
+      </trim>
+    </if>
+  </select>
+  <select id="selectSelective" resultMap="BaseResultMap">
+    <include refid="select_sql" />
+  </select>
+  <select id="selectCount" resultType="java.lang.Integer">
+    select count(1) total from (
+    select  <if test='selectOne'>top 1</if>
+     distinct ${fields}
+    from t_stock stock
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on stock.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on stock.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on stock.id=${domain.middleTable}_alis.stock_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where 1=1 
+    <if test="whereCondition != null">
+      <foreach collection="whereCondition" index="index" item="condition">
+        and ${condition}
+      </foreach>
+    </if>
+    <if test="orderCondition != null">
+      <trim prefix="order by" suffixOverrides=",">
+        <foreach collection="orderCondition" index="index" item="condition">
+           ${condition},
+        </foreach>
+      </trim>
+    </if>
+    ) as s
+  </select>
+  <update id="deleteByPrimaryKey">
+      update t_stock set remove = 1 , update_time=#{updateTime} , update_user=#{updateUser} where id = #{id,jdbcType=BIGINT}
+  </update>
+  <insert id="insert" parameterType="com.dhl.fin.api.domain.Stock">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Long">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into t_stock (create_time, create_user, remove, 
+      update_time, update_user, aps, 
+      code, dar, date, eps, 
+      float_market_value, float_stock, holder_ratio, 
+      holder_value, name, pb, 
+      pe, price, profit, profit_ratio, 
+      stock_per_person, total_assets, total_debt, 
+      total_income, total_income_ratio, total_market_value, 
+      total_stock, trade)
+    values (#{createTime,jdbcType=TIMESTAMP}, #{createUser,jdbcType=VARCHAR}, #{remove,jdbcType=BIT}, 
+      #{updateTime,jdbcType=TIMESTAMP}, #{updateUser,jdbcType=VARCHAR}, #{aps,jdbcType=DOUBLE}, 
+      #{code,jdbcType=VARCHAR}, #{dar,jdbcType=DOUBLE}, #{date,jdbcType=TIMESTAMP}, #{eps,jdbcType=DOUBLE}, 
+      #{floatMarketValue,jdbcType=VARCHAR}, #{floatStock,jdbcType=VARCHAR}, #{holderRatio,jdbcType=DOUBLE}, 
+      #{holderValue,jdbcType=VARCHAR}, #{name,jdbcType=VARCHAR}, #{pb,jdbcType=DOUBLE}, 
+      #{pe,jdbcType=DOUBLE}, #{price,jdbcType=DOUBLE}, #{profit,jdbcType=VARCHAR}, #{profitRatio,jdbcType=DOUBLE}, 
+      #{stockPerPerson,jdbcType=VARCHAR}, #{totalAssets,jdbcType=VARCHAR}, #{totalDebt,jdbcType=VARCHAR}, 
+      #{totalIncome,jdbcType=VARCHAR}, #{totalIncomeRatio,jdbcType=DOUBLE}, #{totalMarketValue,jdbcType=VARCHAR}, 
+      #{totalStock,jdbcType=VARCHAR}, #{trade,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.dhl.fin.api.domain.Stock">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Long">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into t_stock
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="createTime != null">
+        create_time,
+      </if>
+      <if test="createUser != null">
+        create_user,
+      </if>
+      <if test="remove != null">
+        remove,
+      </if>
+      <if test="updateTime != null">
+        update_time,
+      </if>
+      <if test="updateUser != null">
+        update_user,
+      </if>
+      <if test="aps != null">
+        aps,
+      </if>
+      <if test="code != null">
+        code,
+      </if>
+      <if test="dar != null">
+        dar,
+      </if>
+      <if test="date != null">
+        date,
+      </if>
+      <if test="eps != null">
+        eps,
+      </if>
+      <if test="floatMarketValue != null">
+        float_market_value,
+      </if>
+      <if test="floatStock != null">
+        float_stock,
+      </if>
+      <if test="holderRatio != null">
+        holder_ratio,
+      </if>
+      <if test="holderValue != null">
+        holder_value,
+      </if>
+      <if test="name != null">
+        name,
+      </if>
+      <if test="pb != null">
+        pb,
+      </if>
+      <if test="pe != null">
+        pe,
+      </if>
+      <if test="price != null">
+        price,
+      </if>
+      <if test="profit != null">
+        profit,
+      </if>
+      <if test="profitRatio != null">
+        profit_ratio,
+      </if>
+      <if test="stockPerPerson != null">
+        stock_per_person,
+      </if>
+      <if test="totalAssets != null">
+        total_assets,
+      </if>
+      <if test="totalDebt != null">
+        total_debt,
+      </if>
+      <if test="totalIncome != null">
+        total_income,
+      </if>
+      <if test="totalIncomeRatio != null">
+        total_income_ratio,
+      </if>
+      <if test="totalMarketValue != null">
+        total_market_value,
+      </if>
+      <if test="totalStock != null">
+        total_stock,
+      </if>
+      <if test="trade != null">
+        trade,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createUser != null">
+        #{createUser,jdbcType=VARCHAR},
+      </if>
+      <if test="remove != null">
+        #{remove,jdbcType=BIT},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateUser != null">
+        #{updateUser,jdbcType=VARCHAR},
+      </if>
+      <if test="aps != null">
+        #{aps,jdbcType=DOUBLE},
+      </if>
+      <if test="code != null">
+        #{code,jdbcType=VARCHAR},
+      </if>
+      <if test="dar != null">
+        #{dar,jdbcType=DOUBLE},
+      </if>
+      <if test="date != null">
+        #{date,jdbcType=TIMESTAMP},
+      </if>
+      <if test="eps != null">
+        #{eps,jdbcType=DOUBLE},
+      </if>
+      <if test="floatMarketValue != null">
+        #{floatMarketValue,jdbcType=VARCHAR},
+      </if>
+      <if test="floatStock != null">
+        #{floatStock,jdbcType=VARCHAR},
+      </if>
+      <if test="holderRatio != null">
+        #{holderRatio,jdbcType=DOUBLE},
+      </if>
+      <if test="holderValue != null">
+        #{holderValue,jdbcType=VARCHAR},
+      </if>
+      <if test="name != null">
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="pb != null">
+        #{pb,jdbcType=DOUBLE},
+      </if>
+      <if test="pe != null">
+        #{pe,jdbcType=DOUBLE},
+      </if>
+      <if test="price != null">
+        #{price,jdbcType=DOUBLE},
+      </if>
+      <if test="profit != null">
+        #{profit,jdbcType=VARCHAR},
+      </if>
+      <if test="profitRatio != null">
+        #{profitRatio,jdbcType=DOUBLE},
+      </if>
+      <if test="stockPerPerson != null">
+        #{stockPerPerson,jdbcType=VARCHAR},
+      </if>
+      <if test="totalAssets != null">
+        #{totalAssets,jdbcType=VARCHAR},
+      </if>
+      <if test="totalDebt != null">
+        #{totalDebt,jdbcType=VARCHAR},
+      </if>
+      <if test="totalIncome != null">
+        #{totalIncome,jdbcType=VARCHAR},
+      </if>
+      <if test="totalIncomeRatio != null">
+        #{totalIncomeRatio,jdbcType=DOUBLE},
+      </if>
+      <if test="totalMarketValue != null">
+        #{totalMarketValue,jdbcType=VARCHAR},
+      </if>
+      <if test="totalStock != null">
+        #{totalStock,jdbcType=VARCHAR},
+      </if>
+      <if test="trade != null">
+        #{trade,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective">
+    update t_stock
+    <set>
+      <if test="domain.createTime != null ">
+        create_time = #{domain.createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="domain.createUser != null ">
+        create_user = #{domain.createUser,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.remove != null ">
+        remove = #{domain.remove,jdbcType=BIT},
+      </if>
+      <if test="domain.updateTime != null ">
+        update_time = #{domain.updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="domain.updateUser != null ">
+        update_user = #{domain.updateUser,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.aps != null ">
+        aps = #{domain.aps,jdbcType=DOUBLE},
+      </if>
+      <if test="domain.code != null ">
+        code = #{domain.code,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.dar != null ">
+        dar = #{domain.dar,jdbcType=DOUBLE},
+      </if>
+      <if test="domain.date != null ">
+        date = #{domain.date,jdbcType=TIMESTAMP},
+      </if>
+      <if test="domain.eps != null ">
+        eps = #{domain.eps,jdbcType=DOUBLE},
+      </if>
+      <if test="domain.floatMarketValue != null ">
+        float_market_value = #{domain.floatMarketValue,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.floatStock != null ">
+        float_stock = #{domain.floatStock,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.holderRatio != null ">
+        holder_ratio = #{domain.holderRatio,jdbcType=DOUBLE},
+      </if>
+      <if test="domain.holderValue != null ">
+        holder_value = #{domain.holderValue,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.name != null ">
+        name = #{domain.name,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.pb != null ">
+        pb = #{domain.pb,jdbcType=DOUBLE},
+      </if>
+      <if test="domain.pe != null ">
+        pe = #{domain.pe,jdbcType=DOUBLE},
+      </if>
+      <if test="domain.price != null ">
+        price = #{domain.price,jdbcType=DOUBLE},
+      </if>
+      <if test="domain.profit != null ">
+        profit = #{domain.profit,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.profitRatio != null ">
+        profit_ratio = #{domain.profitRatio,jdbcType=DOUBLE},
+      </if>
+      <if test="domain.stockPerPerson != null ">
+        stock_per_person = #{domain.stockPerPerson,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.totalAssets != null ">
+        total_assets = #{domain.totalAssets,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.totalDebt != null ">
+        total_debt = #{domain.totalDebt,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.totalIncome != null ">
+        total_income = #{domain.totalIncome,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.totalIncomeRatio != null ">
+        total_income_ratio = #{domain.totalIncomeRatio,jdbcType=DOUBLE},
+      </if>
+      <if test="domain.totalMarketValue != null ">
+        total_market_value = #{domain.totalMarketValue,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.totalStock != null ">
+        total_stock = #{domain.totalStock,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.trade != null ">
+        trade = #{domain.trade,jdbcType=VARCHAR},
+      </if>
+    </set>
+    <trim prefix="where" suffixOverrides="and">
+      <foreach collection="query.whereCondition" item="condition">
+         ${condition}
+      </foreach>
+    </trim>
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.dhl.fin.api.domain.Stock">
+    update t_stock
+    set create_time = #{createTime,jdbcType=TIMESTAMP},
+      create_user = #{createUser,jdbcType=VARCHAR},
+      remove = #{remove,jdbcType=BIT},
+      update_time = #{updateTime,jdbcType=TIMESTAMP},
+      update_user = #{updateUser,jdbcType=VARCHAR},
+      aps = #{aps,jdbcType=DOUBLE},
+      code = #{code,jdbcType=VARCHAR},
+      dar = #{dar,jdbcType=DOUBLE},
+      date = #{date,jdbcType=TIMESTAMP},
+      eps = #{eps,jdbcType=DOUBLE},
+      float_market_value = #{floatMarketValue,jdbcType=VARCHAR},
+      float_stock = #{floatStock,jdbcType=VARCHAR},
+      holder_ratio = #{holderRatio,jdbcType=DOUBLE},
+      holder_value = #{holderValue,jdbcType=VARCHAR},
+      name = #{name,jdbcType=VARCHAR},
+      pb = #{pb,jdbcType=DOUBLE},
+      pe = #{pe,jdbcType=DOUBLE},
+      price = #{price,jdbcType=DOUBLE},
+      profit = #{profit,jdbcType=VARCHAR},
+      profit_ratio = #{profitRatio,jdbcType=DOUBLE},
+      stock_per_person = #{stockPerPerson,jdbcType=VARCHAR},
+      total_assets = #{totalAssets,jdbcType=VARCHAR},
+      total_debt = #{totalDebt,jdbcType=VARCHAR},
+      total_income = #{totalIncome,jdbcType=VARCHAR},
+      total_income_ratio = #{totalIncomeRatio,jdbcType=DOUBLE},
+      total_market_value = #{totalMarketValue,jdbcType=VARCHAR},
+      total_stock = #{totalStock,jdbcType=VARCHAR},
+      trade = #{trade,jdbcType=VARCHAR}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <select id="selectOne" resultMap="BaseResultMap">
+    <include refid="select_sql"/>
+  </select>
+</mapper>

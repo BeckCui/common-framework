@@ -1,0 +1,376 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dhl.fin.api.dao.finfin.LogDao">
+  <resultMap id="BaseResultMap" type="com.dhl.fin.api.domain.Log">
+    <id column="log_id" property="id" />
+    <result column="log_project_code" property="projectCode" />
+    <result column="log_project_name" property="projectName" />
+    <result column="log_menu" property="menu" />
+    <result column="log_domain" property="domain" />
+    <result column="log_action" property="action" />
+    <result column="log_status" property="status" />
+    <result column="log_remark" property="remark" />
+    <result column="log_uuid" property="uuid" />
+    <result column="log_ip" property="ip" />
+    <result column="log_browser" property="browser" />
+    <result column="log_client" property="client" />
+    <result column="log_remove" property="remove" />
+    <result column="log_create_time" property="createTime" />
+    <result column="log_update_time" property="updateTime" />
+    <result column="log_create_user" property="createUser" />
+    <result column="log_update_user" property="updateUser" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    log.id as log_id,log.create_time as log_create_time,log.create_user as log_create_user,log.remove as log_remove,log.update_time as log_update_time,log.update_user as log_update_user,log.action as log_action,log.browser as log_browser,
+    log.client as log_client,log.domain as log_domain,log.ip as log_ip,log.menu as log_menu,log.project_code as log_project_code,log.project_name as log_project_name,log.remark as log_remark,log.status as log_status,log.uuid as log_uuid
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain" />
+    </if>
+  </sql>
+  <sql id="select_sql">
+    select  <if test='selectOne'>top 1</if>
+    <include refid="Base_Column_List" />
+    from t_log log
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on log.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on log.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on log.id=${domain.middleTable}_alis.log_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where 1=1 
+    <if test="whereCondition != null">
+      <foreach collection="whereCondition" index="index" item="condition">
+        and ${condition}
+      </foreach>
+    </if>
+    <if test="orderCondition != null">
+      <trim prefix="order by" suffixOverrides=",">
+        <foreach collection="orderCondition" index="index" item="condition">
+           ${condition},
+        </foreach>
+      </trim>
+    </if>
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap">
+    select  <if test='selectOne'>top 1</if>
+    <include refid="Base_Column_List" />
+    from t_log log
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on log.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on log.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on log.id=${domain.middleTable}_alis.log_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where log.id = #{id,jdbcType=BIGINT}
+  </select>
+  <select id="selectPageQuery" resultMap="BaseResultMap">
+    with dd as (select distinct ${orderFields} from t_log log 
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on log.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on log.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on log.id=${domain.middleTable}_alis.log_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where 1 = 1 
+    <if test="whereCondition != null">
+      <foreach collection="whereCondition" index="index" item="condition">
+        and ${condition}
+      </foreach>
+    </if>
+    <if test="orderCondition != null">
+      <trim prefix="order by" suffixOverrides=",">
+        <foreach collection="orderCondition" index="index" item="condition">
+           ${condition},
+        </foreach>
+      </trim>
+    </if>
+    offset ${startIndex} rows fetch next ${length} rows only)
+    select <include refid="Base_Column_List" />
+    from t_log log
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on log.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on log.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on log.id=${domain.middleTable}_alis.log_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where exists(select 1 from dd where dd.id = log.id)
+    <if test="orderCondition != null">
+      <trim prefix="order by" suffixOverrides=",">
+        <foreach collection="orderCondition" index="index" item="condition">
+           ${condition},
+        </foreach>
+      </trim>
+    </if>
+  </select>
+  <select id="selectSelective" resultMap="BaseResultMap">
+    <include refid="select_sql" />
+  </select>
+  <select id="selectCount" resultType="java.lang.Integer">
+    select count(1) total from (
+    select  <if test='selectOne'>top 1</if>
+     distinct ${fields}
+    from t_log log
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on log.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on log.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on log.id=${domain.middleTable}_alis.log_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where 1=1 
+    <if test="whereCondition != null">
+      <foreach collection="whereCondition" index="index" item="condition">
+        and ${condition}
+      </foreach>
+    </if>
+    <if test="orderCondition != null">
+      <trim prefix="order by" suffixOverrides=",">
+        <foreach collection="orderCondition" index="index" item="condition">
+           ${condition},
+        </foreach>
+      </trim>
+    </if>
+    ) as s
+  </select>
+  <update id="deleteByPrimaryKey">
+      update t_log set remove = 1 , update_time=#{updateTime} , update_user=#{updateUser} where id = #{id,jdbcType=BIGINT}
+  </update>
+  <insert id="insert" parameterType="com.dhl.fin.api.domain.Log">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Long">
+       SELECT @@IDENTITY
+    </selectKey>
+    insert into t_log (create_time, create_user, remove, 
+      update_time, update_user, action, 
+      browser, client, domain, 
+      ip, menu, project_code, 
+      project_name, remark, status, 
+      uuid)
+    values (#{createTime,jdbcType=TIMESTAMP}, #{createUser,jdbcType=VARCHAR}, #{remove,jdbcType=BIT}, 
+      #{updateTime,jdbcType=TIMESTAMP}, #{updateUser,jdbcType=VARCHAR}, #{action,jdbcType=VARCHAR}, 
+      #{browser,jdbcType=VARCHAR}, #{client,jdbcType=VARCHAR}, #{domain,jdbcType=VARCHAR}, 
+      #{ip,jdbcType=VARCHAR}, #{menu,jdbcType=VARCHAR}, #{projectCode,jdbcType=VARCHAR}, 
+      #{projectName,jdbcType=VARCHAR}, #{remark,jdbcType=VARCHAR}, #{status,jdbcType=VARCHAR}, 
+      #{uuid,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.dhl.fin.api.domain.Log">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Long">
+       SELECT @@IDENTITY
+    </selectKey>
+    insert into t_log
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="createTime != null">
+        create_time,
+      </if>
+      <if test="createUser != null">
+        create_user,
+      </if>
+      <if test="remove != null">
+        remove,
+      </if>
+      <if test="updateTime != null">
+        update_time,
+      </if>
+      <if test="updateUser != null">
+        update_user,
+      </if>
+      <if test="action != null">
+        action,
+      </if>
+      <if test="browser != null">
+        browser,
+      </if>
+      <if test="client != null">
+        client,
+      </if>
+      <if test="domain != null">
+        domain,
+      </if>
+      <if test="ip != null">
+        ip,
+      </if>
+      <if test="menu != null">
+        menu,
+      </if>
+      <if test="projectCode != null">
+        project_code,
+      </if>
+      <if test="projectName != null">
+        project_name,
+      </if>
+      <if test="remark != null">
+        remark,
+      </if>
+      <if test="status != null">
+        status,
+      </if>
+      <if test="uuid != null">
+        uuid,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createUser != null">
+        #{createUser,jdbcType=VARCHAR},
+      </if>
+      <if test="remove != null">
+        #{remove,jdbcType=BIT},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateUser != null">
+        #{updateUser,jdbcType=VARCHAR},
+      </if>
+      <if test="action != null">
+        #{action,jdbcType=VARCHAR},
+      </if>
+      <if test="browser != null">
+        #{browser,jdbcType=VARCHAR},
+      </if>
+      <if test="client != null">
+        #{client,jdbcType=VARCHAR},
+      </if>
+      <if test="domain != null">
+        #{domain,jdbcType=VARCHAR},
+      </if>
+      <if test="ip != null">
+        #{ip,jdbcType=VARCHAR},
+      </if>
+      <if test="menu != null">
+        #{menu,jdbcType=VARCHAR},
+      </if>
+      <if test="projectCode != null">
+        #{projectCode,jdbcType=VARCHAR},
+      </if>
+      <if test="projectName != null">
+        #{projectName,jdbcType=VARCHAR},
+      </if>
+      <if test="remark != null">
+        #{remark,jdbcType=VARCHAR},
+      </if>
+      <if test="status != null">
+        #{status,jdbcType=VARCHAR},
+      </if>
+      <if test="uuid != null">
+        #{uuid,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective">
+    update t_log
+    <set>
+      <if test="domain.createTime != null ">
+        create_time = #{domain.createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="domain.createUser != null ">
+        create_user = #{domain.createUser,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.remove != null ">
+        remove = #{domain.remove,jdbcType=BIT},
+      </if>
+      <if test="domain.updateTime != null ">
+        update_time = #{domain.updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="domain.updateUser != null ">
+        update_user = #{domain.updateUser,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.action != null ">
+        action = #{domain.action,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.browser != null ">
+        browser = #{domain.browser,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.client != null ">
+        client = #{domain.client,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.domain != null ">
+        domain = #{domain.domain,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.ip != null ">
+        ip = #{domain.ip,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.menu != null ">
+        menu = #{domain.menu,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.projectCode != null ">
+        project_code = #{domain.projectCode,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.projectName != null ">
+        project_name = #{domain.projectName,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.remark != null ">
+        remark = #{domain.remark,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.status != null ">
+        status = #{domain.status,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.uuid != null ">
+        uuid = #{domain.uuid,jdbcType=VARCHAR},
+      </if>
+    </set>
+    <trim prefix="where" suffixOverrides="and">
+      <foreach collection="query.whereCondition" item="condition">
+         ${condition}
+      </foreach>
+    </trim>
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.dhl.fin.api.domain.Log">
+    update t_log
+    set create_time = #{createTime,jdbcType=TIMESTAMP},
+      create_user = #{createUser,jdbcType=VARCHAR},
+      remove = #{remove,jdbcType=BIT},
+      update_time = #{updateTime,jdbcType=TIMESTAMP},
+      update_user = #{updateUser,jdbcType=VARCHAR},
+      action = #{action,jdbcType=VARCHAR},
+      browser = #{browser,jdbcType=VARCHAR},
+      client = #{client,jdbcType=VARCHAR},
+      domain = #{domain,jdbcType=VARCHAR},
+      ip = #{ip,jdbcType=VARCHAR},
+      menu = #{menu,jdbcType=VARCHAR},
+      project_code = #{projectCode,jdbcType=VARCHAR},
+      project_name = #{projectName,jdbcType=VARCHAR},
+      remark = #{remark,jdbcType=VARCHAR},
+      status = #{status,jdbcType=VARCHAR},
+      uuid = #{uuid,jdbcType=VARCHAR}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <select id="selectOne" resultMap="BaseResultMap">
+    <include refid="select_sql"/>
+  </select>
+</mapper>

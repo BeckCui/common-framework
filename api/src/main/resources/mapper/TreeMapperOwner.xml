@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dhl.fin.api.dao.finTreeDaoOwner">
+
+    <update id="updateSort">
+         UPDATE t_tree
+         SET t_tree.order_num = b.order_num  + 1
+          from t_tree c
+          INNER JOIN
+         (
+          SELECT a.id , a.order_num
+          FROM t_tree a
+          LEFT JOIN t_tree b ON a.parent_id= b.id
+          WHERE b.code = #{targetCode} and a.order_num >= #{startOrderNum}
+          ) b ON c.id = b.id
+    </update>
+
+    <update id="updateParentIdDrag">
+        UPDATE t_tree
+        SET t_tree.parent_id = b.parent_id
+        from t_tree c, (SELECT id, parent_id FROM t_tree WHERE CODE = #{targetCode}) b
+        WHERE c.code = #{dragCode}
+    </update>
+
+    <update id="updateParentIdDragInner">
+        UPDATE t_tree
+        SET t_tree.parent_id = b.id
+        from t_tree c , ( SELECT id,parent_id FROM t_tree WHERE CODE = #{targetCode} ) b
+        WHERE c.code = #{dragCode}
+    </update>
+
+
+</mapper>

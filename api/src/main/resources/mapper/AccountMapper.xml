@@ -1,0 +1,389 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dhl.fin.api.dao.finAccountDao">
+  <resultMap id="BaseResultMap" type="com.dhl.fin.api.domain.Account">
+    <id column="account_id" property="id" />
+    <result column="account_uuid" property="uuid" />
+    <result column="account_user_no" property="userNo" />
+    <result column="account_name" property="name" />
+    <result column="account_email" property="email" />
+    <result column="account_available" property="available" />
+    <result column="account_is_super_manager" property="isSuperManager" />
+    <result column="account_remove" property="remove" />
+    <result column="account_create_time" property="createTime" />
+    <result column="account_update_time" property="updateTime" />
+    <result column="account_create_user" property="createUser" />
+    <result column="account_update_user" property="updateUser" />
+    <collection ofType="com.dhl.fin.api.domain.Project" property="projects">
+      <id column="projects_id" property="id" />
+      <result column="projects_name" property="name" />
+      <result column="projects_en_name" property="enName" />
+      <result column="projects_code" property="code" />
+      <result column="projects_remove" property="remove" />
+      <result column="projects_create_time" property="createTime" />
+      <result column="projects_update_time" property="updateTime" />
+      <result column="projects_create_user" property="createUser" />
+      <result column="projects_update_user" property="updateUser" />
+    </collection>
+    <collection ofType="com.dhl.fin.api.domain.Role" property="roles">
+      <id column="roles_id" property="id" />
+      <result column="roles_name" property="name" />
+      <result column="roles_code" property="code" />
+      <result column="roles_remove" property="remove" />
+      <result column="roles_create_time" property="createTime" />
+      <result column="roles_update_time" property="updateTime" />
+      <result column="roles_create_user" property="createUser" />
+      <result column="roles_update_user" property="updateUser" />
+    </collection>
+    <collection ofType="com.dhl.fin.api.domain.Tree" property="dataPerTrees">
+      <id column="data_per_trees_id" property="id" />
+      <result column="data_per_trees_title" property="title" />
+      <result column="data_per_trees_code" property="code" />
+      <result column="data_per_trees_order_num" property="orderNum" />
+      <result column="data_per_trees_leaf" property="leaf" />
+      <result column="data_per_trees_parent_line" property="parentLine" />
+      <result column="data_per_trees_remove" property="remove" />
+      <result column="data_per_trees_create_time" property="createTime" />
+      <result column="data_per_trees_update_time" property="updateTime" />
+      <result column="data_per_trees_create_user" property="createUser" />
+      <result column="data_per_trees_update_user" property="updateUser" />
+    </collection>
+  </resultMap>
+  <sql id="Base_Column_List">
+    account.id as account_id,account.create_time as account_create_time,account.create_user as account_create_user,account.remove as account_remove,account.update_time as account_update_time,account.update_user as account_update_user,account.available as account_available,account.email as account_email,
+    account.is_super_manager as account_is_super_manager,account.name as account_name,account.user_no as account_user_no,account.uuid as account_uuid
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="domain.tableAlia == 'projects'">
+          ,projects.name as projects_name,projects.en_name as projects_en_name,projects.code as projects_code,projects.id as projects_id,projects.remove as projects_remove,projects.create_time as projects_create_time,projects.update_time as projects_update_time,projects.create_user as projects_create_user,projects.update_user as projects_update_user
+        </if>
+        <if test="domain.tableAlia == 'roles'">
+          ,roles.name as roles_name,roles.code as roles_code,roles.id as roles_id,roles.remove as roles_remove,roles.create_time as roles_create_time,roles.update_time as roles_update_time,roles.create_user as roles_create_user,roles.update_user as roles_update_user
+        </if>
+        <if test="domain.tableAlia == 'data_per_trees'">
+          ,data_per_trees.title as data_per_trees_title,data_per_trees.code as data_per_trees_code,data_per_trees.order_num as data_per_trees_order_num,data_per_trees.leaf as data_per_trees_leaf,data_per_trees.parent_line as data_per_trees_parent_line,data_per_trees.id as data_per_trees_id,data_per_trees.remove as data_per_trees_remove,data_per_trees.create_time as data_per_trees_create_time,data_per_trees.update_time as data_per_trees_update_time,data_per_trees.create_user as data_per_trees_create_user,data_per_trees.update_user as data_per_trees_update_user
+        </if>
+      </foreach>
+    </if>
+  </sql>
+  <sql id="select_sql">
+    select
+    <include refid="Base_Column_List" />
+    from t_account account
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on account.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on account.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on account.id=${domain.middleTable}_alis.account_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where 1=1 
+    <if test="whereCondition != null">
+      <foreach collection="whereCondition" index="index" item="condition">
+        and ${condition}
+      </foreach>
+    </if>
+    <if test="orderCondition != null">
+      <trim prefix="order by" suffixOverrides=",">
+        <foreach collection="orderCondition" index="index" item="condition">
+           ${condition},
+        </foreach>
+      </trim>
+    </if>
+    <if test='selectOne'>limit 1</if>
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap">
+    select  <if test='selectOne'>top 1</if>
+    <include refid="Base_Column_List" />
+    from t_account account
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on account.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on account.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on account.id=${domain.middleTable}_alis.account_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where account.id = #{id,jdbcType=BIGINT}
+  </select>
+  <select id="selectPageQuery" resultMap="BaseResultMap">
+    with dd as (select distinct ${orderFields} from t_account account 
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on account.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on account.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on account.id=${domain.middleTable}_alis.account_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where 1 = 1 
+    <if test="whereCondition != null">
+      <foreach collection="whereCondition" index="index" item="condition">
+        and ${condition}
+      </foreach>
+    </if>
+    <if test="orderCondition != null">
+      <trim prefix="order by" suffixOverrides=",">
+        <foreach collection="orderCondition" index="index" item="condition">
+           ${condition},
+        </foreach>
+      </trim>
+    </if>
+    offset ${startIndex} rows fetch next ${length} rows only)
+    select <include refid="Base_Column_List" />
+    from t_account account
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on account.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on account.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on account.id=${domain.middleTable}_alis.account_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where exists(select 1 from dd where dd.id = account.id)
+    <if test="orderCondition != null">
+      <trim prefix="order by" suffixOverrides=",">
+        <foreach collection="orderCondition" index="index" item="condition">
+           ${condition},
+        </foreach>
+      </trim>
+    </if>
+  </select>
+  <select id="selectSelective" resultMap="BaseResultMap">
+    <include refid="select_sql" />
+  </select>
+  <select id="selectCount" resultType="java.lang.Integer">
+    select count(1) total from (
+    select  <if test='selectOne'>top 1</if>
+     distinct ${fields}
+    from t_account account
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on account.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on account.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on account.id=${domain.middleTable}_alis.account_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where 1=1 
+    <if test="whereCondition != null">
+      <foreach collection="whereCondition" index="index" item="condition">
+        and ${condition}
+      </foreach>
+    </if>
+    <if test="orderCondition != null">
+      <trim prefix="order by" suffixOverrides=",">
+        <foreach collection="orderCondition" index="index" item="condition">
+           ${condition},
+        </foreach>
+      </trim>
+    </if>
+    ) as s
+  </select>
+  <update id="deleteByPrimaryKey">
+      update t_account set remove = 1 , update_time=#{updateTime} , update_user=#{updateUser} where id = #{id,jdbcType=BIGINT}
+  </update>
+  <insert id="insert" parameterType="com.dhl.fin.api.domain.Account">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Long">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into t_account (create_time, create_user, remove, 
+      update_time, update_user, available, 
+      email, is_super_manager, name, 
+      user_no, uuid)
+    values (#{createTime,jdbcType=TIMESTAMP}, #{createUser,jdbcType=VARCHAR}, #{remove,jdbcType=BIT}, 
+      #{updateTime,jdbcType=TIMESTAMP}, #{updateUser,jdbcType=VARCHAR}, #{available,jdbcType=BIT}, 
+      #{email,jdbcType=VARCHAR}, #{isSuperManager,jdbcType=BIT}, #{name,jdbcType=VARCHAR}, 
+      #{userNo,jdbcType=VARCHAR}, #{uuid,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.dhl.fin.api.domain.Account">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Long">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into t_account
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="createTime != null">
+        create_time,
+      </if>
+      <if test="createUser != null">
+        create_user,
+      </if>
+      <if test="remove != null">
+        remove,
+      </if>
+      <if test="updateTime != null">
+        update_time,
+      </if>
+      <if test="updateUser != null">
+        update_user,
+      </if>
+      <if test="available != null">
+        available,
+      </if>
+      <if test="email != null">
+        email,
+      </if>
+      <if test="isSuperManager != null">
+        is_super_manager,
+      </if>
+      <if test="name != null">
+        name,
+      </if>
+      <if test="userNo != null">
+        user_no,
+      </if>
+      <if test="uuid != null">
+        uuid,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createUser != null">
+        #{createUser,jdbcType=VARCHAR},
+      </if>
+      <if test="remove != null">
+        #{remove,jdbcType=BIT},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateUser != null">
+        #{updateUser,jdbcType=VARCHAR},
+      </if>
+      <if test="available != null">
+        #{available,jdbcType=BIT},
+      </if>
+      <if test="email != null">
+        #{email,jdbcType=VARCHAR},
+      </if>
+      <if test="isSuperManager != null">
+        #{isSuperManager,jdbcType=BIT},
+      </if>
+      <if test="name != null">
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="userNo != null">
+        #{userNo,jdbcType=VARCHAR},
+      </if>
+      <if test="uuid != null">
+        #{uuid,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective">
+    update t_account
+    <set>
+      <if test="domain.createTime != null ">
+        create_time = #{domain.createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="domain.createUser != null ">
+        create_user = #{domain.createUser,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.remove != null ">
+        remove = #{domain.remove,jdbcType=BIT},
+      </if>
+      <if test="domain.updateTime != null ">
+        update_time = #{domain.updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="domain.updateUser != null ">
+        update_user = #{domain.updateUser,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.available != null ">
+        available = #{domain.available,jdbcType=BIT},
+      </if>
+      <if test="domain.email != null ">
+        email = #{domain.email,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.isSuperManager != null ">
+        is_super_manager = #{domain.isSuperManager,jdbcType=BIT},
+      </if>
+      <if test="domain.name != null ">
+        name = #{domain.name,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.userNo != null ">
+        user_no = #{domain.userNo,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.uuid != null ">
+        uuid = #{domain.uuid,jdbcType=VARCHAR},
+      </if>
+    </set>
+    <trim prefix="where" suffixOverrides="and">
+      <foreach collection="query.whereCondition" item="condition">
+         ${condition}
+      </foreach>
+    </trim>
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.dhl.fin.api.domain.Account">
+    update t_account
+    set create_time = #{createTime,jdbcType=TIMESTAMP},
+      create_user = #{createUser,jdbcType=VARCHAR},
+      remove = #{remove,jdbcType=BIT},
+      update_time = #{updateTime,jdbcType=TIMESTAMP},
+      update_user = #{updateUser,jdbcType=VARCHAR},
+      available = #{available,jdbcType=BIT},
+      email = #{email,jdbcType=VARCHAR},
+      is_super_manager = #{isSuperManager,jdbcType=BIT},
+      name = #{name,jdbcType=VARCHAR},
+      user_no = #{userNo,jdbcType=VARCHAR},
+      uuid = #{uuid,jdbcType=VARCHAR}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <insert id="insertAccountProjects">
+    insert into t_account_project(account_id,project_id) values(#{accountId},#{projectId})
+  </insert>
+  <delete id="deleteAccountProjects">
+    delete from t_account_project where account_id=#{accountId} and project_id=#{projectId};
+  </delete>
+  <delete id="deleteAccountProjectsMiddle">
+    delete from t_account_project where account_id=#{accountId}
+  </delete>
+  <insert id="insertAccountRoles">
+    insert into t_account_role(account_id,role_id) values(#{accountId},#{roleId})
+  </insert>
+  <delete id="deleteAccountRoles">
+    delete from t_account_role where account_id=#{accountId} and role_id=#{roleId};
+  </delete>
+  <delete id="deleteAccountRolesMiddle">
+    delete from t_account_role where account_id=#{accountId}
+  </delete>
+  <insert id="insertAccountDataPerTrees">
+    insert into t_account_dataper_tree(account_id,tree_id) values(#{accountId},#{treeId})
+  </insert>
+  <delete id="deleteAccountDataPerTrees">
+    delete from t_account_dataper_tree where account_id=#{accountId} and tree_id=#{treeId};
+  </delete>
+  <delete id="deleteAccountDataPerTreesMiddle">
+    delete from t_account_dataper_tree where account_id=#{accountId}
+  </delete>
+  <select id="selectOne" resultMap="BaseResultMap">
+    <include refid="select_sql"/>
+  </select>
+</mapper>

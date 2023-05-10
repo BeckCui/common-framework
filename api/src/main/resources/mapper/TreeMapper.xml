@@ -1,0 +1,422 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dhl.fin.api.dao.finTreeDao">
+  <resultMap id="BaseResultMap" type="com.dhl.fin.api.domain.Tree">
+    <id column="tree_id" property="id" />
+    <result column="tree_title" property="title" />
+    <result column="tree_code" property="code" />
+    <result column="tree_order_num" property="orderNum" />
+    <result column="tree_leaf" property="leaf" />
+    <result column="tree_parent_line" property="parentLine" />
+    <result column="tree_remove" property="remove" />
+    <result column="tree_create_time" property="createTime" />
+    <result column="tree_update_time" property="updateTime" />
+    <result column="tree_create_user" property="createUser" />
+    <result column="tree_update_user" property="updateUser" />
+    <association javaType="com.dhl.fin.api.domain.Action" property="action">
+      <id column="tree_action_id" property="id" />
+      <result column="action_name" property="name" />
+      <result column="action_code" property="code" />
+      <result column="action_url" property="url" />
+      <result column="action_remove" property="remove" />
+      <result column="action_create_time" property="createTime" />
+      <result column="action_update_time" property="updateTime" />
+      <result column="action_create_user" property="createUser" />
+      <result column="action_update_user" property="updateUser" />
+    </association>
+    <association javaType="com.dhl.fin.api.domain.Menu" property="menu">
+      <id column="tree_menu_id" property="id" />
+      <result column="menu_name" property="name" />
+      <result column="menu_code" property="code" />
+      <result column="menu_icon" property="icon" />
+      <result column="menu_click_url" property="clickUrl" />
+      <result column="menu_remove" property="remove" />
+      <result column="menu_create_time" property="createTime" />
+      <result column="menu_update_time" property="updateTime" />
+      <result column="menu_create_user" property="createUser" />
+      <result column="menu_update_user" property="updateUser" />
+    </association>
+    <association javaType="com.dhl.fin.api.domain.Tree" property="parent">
+      <id column="tree_parent_id" property="id" />
+      <result column="parent_title" property="title" />
+      <result column="parent_code" property="code" />
+      <result column="parent_order_num" property="orderNum" />
+      <result column="parent_leaf" property="leaf" />
+      <result column="parent_parent_line" property="parentLine" />
+      <result column="parent_remove" property="remove" />
+      <result column="parent_create_time" property="createTime" />
+      <result column="parent_update_time" property="updateTime" />
+      <result column="parent_create_user" property="createUser" />
+      <result column="parent_update_user" property="updateUser" />
+    </association>
+    <collection ofType="com.dhl.fin.api.domain.Tree" property="children">
+      <id column="children_id" property="id" />
+      <result column="children_title" property="title" />
+      <result column="children_code" property="code" />
+      <result column="children_order_num" property="orderNum" />
+      <result column="children_leaf" property="leaf" />
+      <result column="children_parent_line" property="parentLine" />
+      <result column="children_remove" property="remove" />
+      <result column="children_create_time" property="createTime" />
+      <result column="children_update_time" property="updateTime" />
+      <result column="children_create_user" property="createUser" />
+      <result column="children_update_user" property="updateUser" />
+    </collection>
+    <collection ofType="com.dhl.fin.api.domain.Role" property="roles">
+      <id column="roles_id" property="id" />
+      <result column="roles_name" property="name" />
+      <result column="roles_code" property="code" />
+      <result column="roles_remove" property="remove" />
+      <result column="roles_create_time" property="createTime" />
+      <result column="roles_update_time" property="updateTime" />
+      <result column="roles_create_user" property="createUser" />
+      <result column="roles_update_user" property="updateUser" />
+    </collection>
+  </resultMap>
+  <sql id="Base_Column_List">
+    tree.id as tree_id,tree.create_time as tree_create_time,tree.create_user as tree_create_user,tree.remove as tree_remove,tree.update_time as tree_update_time,tree.update_user as tree_update_user,tree.code as tree_code,tree.leaf as tree_leaf,tree.order_num as tree_order_num,
+    tree.parent_line as tree_parent_line,tree.title as tree_title,tree.action_id as tree_action_id,tree.menu_id as tree_menu_id,tree.parent_id as tree_parent_id
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="domain.tableAlia == 'action'">
+          ,action.name as action_name,action.code as action_code,action.url as action_url,action.id as action_id,action.remove as action_remove,action.create_time as action_create_time,action.update_time as action_update_time,action.create_user as action_create_user,action.update_user as action_update_user
+        </if>
+        <if test="domain.tableAlia == 'menu'">
+          ,menu.name as menu_name,menu.code as menu_code,menu.icon as menu_icon,menu.click_url as menu_click_url,menu.id as menu_id,menu.remove as menu_remove,menu.create_time as menu_create_time,menu.update_time as menu_update_time,menu.create_user as menu_create_user,menu.update_user as menu_update_user
+        </if>
+        <if test="domain.tableAlia == 'parent'">
+          ,parent.title as parent_title,parent.code as parent_code,parent.order_num as parent_order_num,parent.leaf as parent_leaf,parent.parent_line as parent_parent_line,parent.id as parent_id,parent.remove as parent_remove,parent.create_time as parent_create_time,parent.update_time as parent_update_time,parent.create_user as parent_create_user,parent.update_user as parent_update_user
+        </if>
+        <if test="domain.tableAlia == 'children'">
+          ,children.title as children_title,children.code as children_code,children.order_num as children_order_num,children.leaf as children_leaf,children.parent_line as children_parent_line,children.id as children_id,children.remove as children_remove,children.create_time as children_create_time,children.update_time as children_update_time,children.create_user as children_create_user,children.update_user as children_update_user
+        </if>
+        <if test="domain.tableAlia == 'roles'">
+          ,roles.name as roles_name,roles.code as roles_code,roles.id as roles_id,roles.remove as roles_remove,roles.create_time as roles_create_time,roles.update_time as roles_update_time,roles.create_user as roles_create_user,roles.update_user as roles_update_user
+        </if>
+      </foreach>
+    </if>
+  </sql>
+  <sql id="select_sql">
+    select  <if test='selectOne'>top 1</if>
+    <include refid="Base_Column_List" />
+    from t_tree tree
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on tree.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on tree.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on tree.id=${domain.middleTable}_alis.tree_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where 1=1 
+    <if test="whereCondition != null">
+      <foreach collection="whereCondition" index="index" item="condition">
+        and ${condition}
+      </foreach>
+    </if>
+    <if test="orderCondition != null">
+      <trim prefix="order by" suffixOverrides=",">
+        <foreach collection="orderCondition" index="index" item="condition">
+           ${condition},
+        </foreach>
+      </trim>
+    </if>
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap">
+    select  <if test='selectOne'>top 1</if>
+    <include refid="Base_Column_List" />
+    from t_tree tree
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on tree.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on tree.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on tree.id=${domain.middleTable}_alis.tree_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where tree.id = #{id,jdbcType=BIGINT}
+  </select>
+  <select id="selectPageQuery" resultMap="BaseResultMap">
+    with dd as (select distinct ${orderFields} from t_tree tree 
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on tree.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on tree.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on tree.id=${domain.middleTable}_alis.tree_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where 1 = 1 
+    <if test="whereCondition != null">
+      <foreach collection="whereCondition" index="index" item="condition">
+        and ${condition}
+      </foreach>
+    </if>
+    <if test="orderCondition != null">
+      <trim prefix="order by" suffixOverrides=",">
+        <foreach collection="orderCondition" index="index" item="condition">
+           ${condition},
+        </foreach>
+      </trim>
+    </if>
+    offset ${startIndex} rows fetch next ${length} rows only)
+    select <include refid="Base_Column_List" />
+    from t_tree tree
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on tree.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on tree.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on tree.id=${domain.middleTable}_alis.tree_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where exists(select 1 from dd where dd.id = tree.id)
+    <if test="orderCondition != null">
+      <trim prefix="order by" suffixOverrides=",">
+        <foreach collection="orderCondition" index="index" item="condition">
+           ${condition},
+        </foreach>
+      </trim>
+    </if>
+  </select>
+  <select id="selectSelective" resultMap="BaseResultMap">
+    <include refid="select_sql" />
+  </select>
+  <select id="selectCount" resultType="java.lang.Integer">
+    select count(1) total from (
+    select  <if test='selectOne'>top 1</if>
+     distinct ${fields}
+    from t_tree tree
+    <if test="joinMap != null">
+      <foreach collection="joinMap" index="index" item="domain">
+        <if test="!domain.isM2M and !domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on tree.${domain.tableAlia}_id = ${domain.tableAlia}.id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isO2M">
+          left join t_${domain.tableName} ${domain.tableAlia} on tree.id = ${domain.tableAlia}.${domain.joinField}_id and ${domain.tableAlia}.remove = 0
+        </if>
+        <if test="domain.isM2M">
+          left join ${domain.middleTable} ${domain.middleTable}_alis on tree.id=${domain.middleTable}_alis.tree_id left join t_${domain.tableName} ${domain.tableAlia} on ${domain.tableAlia}.id = ${domain.middleTable}_alis.${domain.invertJoinId} and ${domain.tableAlia}.remove = 0
+        </if>
+      </foreach>
+    </if>
+    where 1=1 
+    <if test="whereCondition != null">
+      <foreach collection="whereCondition" index="index" item="condition">
+        and ${condition}
+      </foreach>
+    </if>
+    <if test="orderCondition != null">
+      <trim prefix="order by" suffixOverrides=",">
+        <foreach collection="orderCondition" index="index" item="condition">
+           ${condition},
+        </foreach>
+      </trim>
+    </if>
+    ) as s
+  </select>
+  <update id="deleteByPrimaryKey">
+      update t_tree set remove = 1 , update_time=#{updateTime} , update_user=#{updateUser} where id = #{id,jdbcType=BIGINT}
+  </update>
+  <insert id="insert" parameterType="com.dhl.fin.api.domain.Tree">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Long">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into t_tree (create_time, create_user, remove, 
+      update_time, update_user, code, 
+      leaf, order_num, parent_line, 
+      title, action_id, menu_id, 
+      parent_id)
+    values (#{createTime,jdbcType=TIMESTAMP}, #{createUser,jdbcType=VARCHAR}, #{remove,jdbcType=BIT}, 
+      #{updateTime,jdbcType=TIMESTAMP}, #{updateUser,jdbcType=VARCHAR}, #{code,jdbcType=VARCHAR}, 
+      #{leaf,jdbcType=BIT}, #{orderNum,jdbcType=INTEGER}, #{parentLine,jdbcType=VARCHAR}, 
+    #{title,jdbcType=VARCHAR},#{action.id,jdbcType=BIGINT},#{menu.id,jdbcType=BIGINT},
+    #{parent.id,jdbcType=BIGINT})
+  </insert>
+  <insert id="insertSelective" parameterType="com.dhl.fin.api.domain.Tree">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Long">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into t_tree
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="createTime != null">
+        create_time,
+      </if>
+      <if test="createUser != null">
+        create_user,
+      </if>
+      <if test="remove != null">
+        remove,
+      </if>
+      <if test="updateTime != null">
+        update_time,
+      </if>
+      <if test="updateUser != null">
+        update_user,
+      </if>
+      <if test="code != null">
+        code,
+      </if>
+      <if test="leaf != null">
+        leaf,
+      </if>
+      <if test="orderNum != null">
+        order_num,
+      </if>
+      <if test="parentLine != null">
+        parent_line,
+      </if>
+      <if test="title != null">
+        title,
+      </if>
+      <if test="action != null and action.id != null">
+        action_id,
+      </if>
+      <if test="menu != null and menu.id != null">
+        menu_id,
+      </if>
+      <if test="parent != null and parent.id != null">
+        parent_id,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createUser != null">
+        #{createUser,jdbcType=VARCHAR},
+      </if>
+      <if test="remove != null">
+        #{remove,jdbcType=BIT},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateUser != null">
+        #{updateUser,jdbcType=VARCHAR},
+      </if>
+      <if test="code != null">
+        #{code,jdbcType=VARCHAR},
+      </if>
+      <if test="leaf != null">
+        #{leaf,jdbcType=BIT},
+      </if>
+      <if test="orderNum != null">
+        #{orderNum,jdbcType=INTEGER},
+      </if>
+      <if test="parentLine != null">
+        #{parentLine,jdbcType=VARCHAR},
+      </if>
+      <if test="title != null">
+        #{title,jdbcType=VARCHAR},
+      </if>
+      <if test="action != null and action.id != null">
+        #{action.id,jdbcType=BIGINT},
+      </if>
+      <if test="menu != null and menu.id != null">
+        #{menu.id,jdbcType=BIGINT},
+      </if>
+      <if test="parent != null and parent.id != null">
+        #{parent.id,jdbcType=BIGINT},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective">
+    update t_tree
+    <set>
+      <if test="domain.createTime != null ">
+        create_time = #{domain.createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="domain.createUser != null ">
+        create_user = #{domain.createUser,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.remove != null ">
+        remove = #{domain.remove,jdbcType=BIT},
+      </if>
+      <if test="domain.updateTime != null ">
+        update_time = #{domain.updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="domain.updateUser != null ">
+        update_user = #{domain.updateUser,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.code != null ">
+        code = #{domain.code,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.leaf != null ">
+        leaf = #{domain.leaf,jdbcType=BIT},
+      </if>
+      <if test="domain.orderNum != null ">
+        order_num = #{domain.orderNum,jdbcType=INTEGER},
+      </if>
+      <if test="domain.parentLine != null ">
+        parent_line = #{domain.parentLine,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.title != null ">
+        title = #{domain.title,jdbcType=VARCHAR},
+      </if>
+      <if test="domain.action != null  and domain.action.id != null ">
+        action_id = #{domain.action.id,jdbcType=BIGINT},
+      </if>
+      <if test="domain.menu != null  and domain.menu.id != null ">
+        menu_id = #{domain.menu.id,jdbcType=BIGINT},
+      </if>
+      <if test="domain.parent != null  and domain.parent.id != null ">
+        parent_id = #{domain.parent.id,jdbcType=BIGINT},
+      </if>
+    </set>
+    <trim prefix="where" suffixOverrides="and">
+      <foreach collection="query.whereCondition" item="condition">
+         ${condition}
+      </foreach>
+    </trim>
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.dhl.fin.api.domain.Tree">
+    update t_tree
+    set create_time = #{createTime,jdbcType=TIMESTAMP},
+      create_user = #{createUser,jdbcType=VARCHAR},
+      remove = #{remove,jdbcType=BIT},
+      update_time = #{updateTime,jdbcType=TIMESTAMP},
+      update_user = #{updateUser,jdbcType=VARCHAR},
+      code = #{code,jdbcType=VARCHAR},
+      leaf = #{leaf,jdbcType=BIT},
+      order_num = #{orderNum,jdbcType=INTEGER},
+      parent_line = #{parentLine,jdbcType=VARCHAR},
+      title = #{title,jdbcType=VARCHAR},
+      action_id = #{action.id,jdbcType=BIGINT},
+      menu_id = #{menu.id,jdbcType=BIGINT},
+      parent_id = #{parent.id,jdbcType=BIGINT}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <insert id="insertTreeRoles">
+    insert into t_role_tree(tree_id,role_id) values(#{treeId},#{roleId})
+  </insert>
+  <delete id="deleteTreeRoles">
+    delete from t_role_tree where tree_id=#{treeId} and role_id=#{roleId};
+  </delete>
+  <delete id="deleteTreeRolesMiddle">
+    delete from t_role_tree where tree_id=#{treeId}
+  </delete>
+  <select id="selectOne" resultMap="BaseResultMap">
+    <include refid="select_sql"/>
+  </select>
+</mapper>
