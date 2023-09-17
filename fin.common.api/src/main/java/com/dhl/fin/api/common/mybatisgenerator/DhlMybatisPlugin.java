@@ -42,10 +42,7 @@ public class DhlMybatisPlugin extends PluginAdapter {
         String domainPackage = "com.dhl.fin.api.domain." + domainNameConfig[0];
         document.getRootElement().getElements().forEach(p -> {
             XmlElement element = (XmlElement) p;
-            String idValue = element.getAttributes().stream()
-                    .filter(item -> item.getName().equals("id"))
-                    .map(item -> item.getValue())
-                    .findFirst().get();
+            String idValue = element.getAttributes().stream().filter(item -> item.getName().equals("id")).map(item -> item.getValue()).findFirst().get();
             switch (element.getName()) {
                 case "sql":
                     changeSqlElement(document, element, domainPackage);
@@ -75,8 +72,8 @@ public class DhlMybatisPlugin extends PluginAdapter {
             }
         });
 
-        addSelectionCommonSql(document, domainPackage);
-        addSelectPageQuery(document, domainPackage);
+        addSelectionCommonSql(document, domainPackage, introspectedTable);
+        addSelectPageQuery(document, domainPackage, introspectedTable);
         addSelectSelective(document);
         addSelectCount(document);
         changeDeleteElement(document);
@@ -113,11 +110,7 @@ public class DhlMybatisPlugin extends PluginAdapter {
             element.getAttributes().remove(index);
             element.getAttributes().add(new Attribute("parameterType", domainPackage));
         }
-        XmlElement selectKeyElement = element.getElements().stream()
-                .filter(item -> item instanceof XmlElement)
-                .map(item -> (XmlElement) item)
-                .filter(e -> e.getName().equals("selectKey"))
-                .findFirst().orElse(null);
+        XmlElement selectKeyElement = element.getElements().stream().filter(item -> item instanceof XmlElement).map(item -> (XmlElement) item).filter(e -> e.getName().equals("selectKey")).findFirst().orElse(null);
         if (ObjectUtil.notNull(selectKeyElement)) {
             List<VisitableElement> children = selectKeyElement.getElements();
             if (((TextElement) children.get(0)).getContent().contains("SCOPE_IDENTITY")) {
@@ -145,36 +138,24 @@ public class DhlMybatisPlugin extends PluginAdapter {
             String lineJoinDomain = StringUtil.toUnderlineCase(p);
             XmlElement ifElement1 = new XmlElement("if");
             ifElement1.addAttribute(new Attribute("test", "domain.tableAlia == '" + lineJoinDomain + "'"));
-            String fieldsString = Arrays.stream(ObjectUtil.loadClass(domainPackage).getDeclaredFields())
-                    .filter(k -> StringUtil.toUnderlineCase(k.getName()).equals(p))
-                    .map(k ->
-                            {
-                                Class joinDomainClass;
-                                if (k.getType().equals(List.class)) {
-                                    joinDomainClass = ((Class) (((ParameterizedType) (k.getGenericType())).getActualTypeArguments()[0]));
-                                } else {
-                                    joinDomainClass = k.getType();
-                                }
-                                return ArrayUtil.addAll(joinDomainClass.getDeclaredFields(), joinDomainClass.getSuperclass().getDeclaredFields());
-                            }
+            String fieldsString = Arrays.stream(ObjectUtil.loadClass(domainPackage).getDeclaredFields()).filter(k -> StringUtil.toUnderlineCase(k.getName()).equals(p)).map(k -> {
+                        Class joinDomainClass;
+                        if (k.getType().equals(List.class)) {
+                            joinDomainClass = ((Class) (((ParameterizedType) (k.getGenericType())).getActualTypeArguments()[0]));
+                        } else {
+                            joinDomainClass = k.getType();
+                        }
+                        return ArrayUtil.addAll(joinDomainClass.getDeclaredFields(), joinDomainClass.getSuperclass().getDeclaredFields());
+                    }
 
-                    )
-                    .flatMap(Arrays::stream)
-                    .filter(k -> (k.getName().equals("id")) || (!k.getType().equals(List.class) && k.getAnnotation(Transient.class) == null && (k.getType().getSuperclass() == null || !k.getType().getSuperclass().getSimpleName().equals("BasicDomain"))))
-                    .map(k -> StringUtil.join(lineJoinDomain, ".", StringUtil.toUnderlineCase(k.getName()), " as ", lineJoinDomain, "_", StringUtil.toUnderlineCase(k.getName())))
-                    .collect(joining(","));
+            ).flatMap(Arrays::stream).filter(k -> (k.getName().equals("id")) || (!k.getType().equals(List.class) && k.getAnnotation(Transient.class) == null && (k.getType().getSuperclass() == null || !k.getType().getSuperclass().getSimpleName().equals("BasicDomain")))).map(k -> StringUtil.join(lineJoinDomain, ".", StringUtil.toUnderlineCase(k.getName()), " as ", lineJoinDomain, "_", StringUtil.toUnderlineCase(k.getName()))).collect(joining(","));
             ifElement1.addElement(new TextElement(StringUtil.join(",", fieldsString)));
             foreachElement.addElement(ifElement1);
         });
 
 
         String domainName = getSimpleDomainName(domainPackage);
-        List<TextElement> textElements = element.getElements().stream()
-                .filter(p -> p instanceof TextElement)
-                .map(p -> ((TextElement) p).getContent().split(","))
-                .map(p -> Arrays.stream(p).map(k -> StringUtils.isEmpty(k.trim()) ? "," : StringUtil.isEmpty(k.trim()) ? "," : StringUtil.join(StringUtil.toUnderlineCase(domainName), ".", k.trim(), " as ", StringUtil.toUnderlineCase(domainName), "_", k.trim())).collect(joining(",")).replaceAll(",,", ","))
-                .map(TextElement::new)
-                .collect(Collectors.toList());
+        List<TextElement> textElements = element.getElements().stream().filter(p -> p instanceof TextElement).map(p -> ((TextElement) p).getContent().split(",")).map(p -> Arrays.stream(p).map(k -> StringUtils.isEmpty(k.trim()) ? "," : StringUtil.isEmpty(k.trim()) ? "," : StringUtil.join(StringUtil.toUnderlineCase(domainName), ".", k.trim(), " as ", StringUtil.toUnderlineCase(domainName), "_", k.trim())).collect(joining(",")).replaceAll(",,", ",")).map(TextElement::new).collect(Collectors.toList());
 
         element.getElements().clear();
         element.getElements().addAll(textElements);
@@ -250,10 +231,7 @@ public class DhlMybatisPlugin extends PluginAdapter {
                 String domainField = StringUtil.toCamelCase(p);
                 String joinType = null;
 
-                joinType = Arrays.stream(domainClass.getDeclaredFields())
-                        .filter(q -> q.getName().equals(domainField))
-                        .map(q -> q.getType().getTypeName())
-                        .findFirst().orElse("");
+                joinType = Arrays.stream(domainClass.getDeclaredFields()).filter(q -> q.getName().equals(domainField)).map(q -> q.getType().getTypeName()).findFirst().orElse("");
                 if (!joinType.endsWith(".List")) {
                     if (!StringUtil.isEmpty(joinType)) {
                         XmlElement associationElement = new XmlElement("association");
@@ -272,24 +250,22 @@ public class DhlMybatisPlugin extends PluginAdapter {
 
 
             //添加collection
-            Arrays.stream(domainClass.getDeclaredFields())
-                    .filter(q -> q.getAnnotation(ManyToMany.class) != null || q.getAnnotation(OneToMany.class) != null)
-                    .forEach(p -> {
-                        Class joinDomainClass = ((Class) (((ParameterizedType) (p.getGenericType())).getActualTypeArguments()[0]));
-                        String joinDomainSimpleName = getSimpleDomainName(joinDomainClass.getSimpleName());
-                        String joinDomainName = StringUtil.toUnderlineCase(joinDomainSimpleName);
+            Arrays.stream(domainClass.getDeclaredFields()).filter(q -> q.getAnnotation(ManyToMany.class) != null || q.getAnnotation(OneToMany.class) != null).forEach(p -> {
+                Class joinDomainClass = ((Class) (((ParameterizedType) (p.getGenericType())).getActualTypeArguments()[0]));
+                String joinDomainSimpleName = getSimpleDomainName(joinDomainClass.getSimpleName());
+                String joinDomainName = StringUtil.toUnderlineCase(joinDomainSimpleName);
 
-                        XmlElement associationElement = new XmlElement("collection");
-                        associationElement.addAttribute(new Attribute("property", p.getName()));
-                        associationElement.addAttribute(new Attribute("ofType", joinDomainClass.getName()));
-                        XmlElement idElement1 = new XmlElement("id");
-                        idElement1.addAttribute(new Attribute("property", "id"));
-                        idElement1.addAttribute(new Attribute("column", StringUtil.join(StringUtil.toUnderlineCase(p.getName()), "_id")));
-                        associationElement.addElement(idElement1);
-                        associationElement.getElements().addAll(getAllResultElement(joinDomainClass.getTypeName(), p.getName()));
+                XmlElement associationElement = new XmlElement("collection");
+                associationElement.addAttribute(new Attribute("property", p.getName()));
+                associationElement.addAttribute(new Attribute("ofType", joinDomainClass.getName()));
+                XmlElement idElement1 = new XmlElement("id");
+                idElement1.addAttribute(new Attribute("property", "id"));
+                idElement1.addAttribute(new Attribute("column", StringUtil.join(StringUtil.toUnderlineCase(p.getName()), "_id")));
+                associationElement.addElement(idElement1);
+                associationElement.getElements().addAll(getAllResultElement(joinDomainClass.getTypeName(), p.getName()));
 
-                        elements.add(associationElement);
-                    });
+                elements.add(associationElement);
+            });
 
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
@@ -308,22 +284,9 @@ public class DhlMybatisPlugin extends PluginAdapter {
         List<String> list1 = null;
         try {
             Class domainClass = ClassLoader.getSystemClassLoader().loadClass(domainPackage);
-            List<String> list2 = Arrays.stream(domainClass.getDeclaredFields())
-                    .filter(q -> q.getAnnotation(ManyToMany.class) != null || q.getAnnotation(OneToMany.class) != null)
-                    .map(Field::getName)
-                    .map(StringUtil::toUnderlineCase)
-                    .collect(Collectors.toList());
+            List<String> list2 = Arrays.stream(domainClass.getDeclaredFields()).filter(q -> q.getAnnotation(ManyToMany.class) != null || q.getAnnotation(OneToMany.class) != null).map(Field::getName).map(StringUtil::toUnderlineCase).collect(Collectors.toList());
 
-            list1 = Arrays.stream(document.getRootElement().getElements()
-                    .stream()
-                    .filter(p -> ((XmlElement) p).getName().equals("sql"))
-                    .map(p -> ((XmlElement) p).getElements()).findFirst().get()
-                    .stream()
-                    .map(p -> ((TextElement) p).getContent()).collect(joining())
-                    .split(","))
-                    .filter(p -> p.endsWith("_id"))
-                    .map(p -> p.replaceAll("_id", "").trim())
-                    .collect(Collectors.toList());
+            list1 = Arrays.stream(document.getRootElement().getElements().stream().filter(p -> p instanceof XmlElement && ((XmlElement) p).getName().equals("sql")).map(p -> ((XmlElement) p).getElements()).findFirst().get().stream().filter(p -> p instanceof TextElement).map(p -> ((TextElement) p).getContent()).collect(joining()).split(",")).filter(p -> p.endsWith("_id")).map(p -> p.replaceAll("_id", "").trim()).collect(Collectors.toList());
 
             list1.addAll(list2);
             return list1;
@@ -339,19 +302,12 @@ public class DhlMybatisPlugin extends PluginAdapter {
         try {
             Class joinDomainClass = ClassLoader.getSystemClassLoader().loadClass(domainPackage);
             Field[] fields = ArrayUtil.addAll(joinDomainClass.getDeclaredFields(), joinDomainClass.getSuperclass().getDeclaredFields());
-            Arrays.stream(fields)
-                    .filter(p ->
-                            p.getAnnotation(Transient.class) == null &&
-                                    !p.getType().equals(List.class)
-                                    && (p.getType().getSuperclass() == null || !p.getType().getSuperclass().getSimpleName().equals("BasicDomain"))
-                                    && !p.getName().equals("id")
-                    )
-                    .forEach(f -> {
-                        XmlElement resultElement = new XmlElement("result");
-                        resultElement.addAttribute(new Attribute("property", f.getName()));
-                        resultElement.addAttribute(new Attribute("column", StringUtil.toUnderlineCase(joinDomainName) + "_" + StringUtil.toUnderlineCase(f.getName())));
-                        elements.add(resultElement);
-                    });
+            Arrays.stream(fields).filter(p -> p.getAnnotation(Transient.class) == null && !p.getType().equals(List.class) && (p.getType().getSuperclass() == null || !p.getType().getSuperclass().getSimpleName().equals("BasicDomain")) && !p.getName().equals("id")).forEach(f -> {
+                XmlElement resultElement = new XmlElement("result");
+                resultElement.addAttribute(new Attribute("property", f.getName()));
+                resultElement.addAttribute(new Attribute("column", StringUtil.toUnderlineCase(joinDomainName) + "_" + StringUtil.toUnderlineCase(f.getName())));
+                elements.add(resultElement);
+            });
 
 
         } catch (ClassNotFoundException e) {
@@ -369,14 +325,13 @@ public class DhlMybatisPlugin extends PluginAdapter {
             VisitableElement visitableElement = element.getElements().get(i);
             if (visitableElement instanceof TextElement && ((TextElement) visitableElement).getContent().contains("Id,")) {
                 TextElement t = ((TextElement) visitableElement);
-                String newContent = Arrays.stream(t.getContent().trim().split(", "))
-                        .map(item -> {
-                            if (item.contains("Id,")) {
-                                return item.replaceAll("#\\{.*,jdbcType=BIGINT}", "#{" + StringUtil.toCamelCase(item.substring(2, item.indexOf(",") - 2)) + ".id,jdbcType=BIGINT}");
-                            } else {
-                                return item;
-                            }
-                        }).collect(joining(","));
+                String newContent = Arrays.stream(t.getContent().trim().split(", ")).map(item -> {
+                    if (item.contains("Id,")) {
+                        return item.replaceAll("#\\{.*,jdbcType=BIGINT}", "#{" + StringUtil.toCamelCase(item.substring(2, item.indexOf(",") - 2)) + ".id,jdbcType=BIGINT}");
+                    } else {
+                        return item;
+                    }
+                }).collect(joining(","));
                 fields.put(i, newContent);
             }
         }
@@ -390,26 +345,17 @@ public class DhlMybatisPlugin extends PluginAdapter {
     }
 
     private void changeInsertSelectiveElement(XmlElement element) {
-        List<String> newTestList = element.getElements().stream()
-                .filter(p -> p instanceof XmlElement && ((XmlElement) p).getName().equals("trim"))
-                .map(p -> (XmlElement) p)
-                .findFirst().get().getElements().stream()
-                .map(p -> (XmlElement) p)
-                .map(p -> {
-                    String testStr = p.getAttributes().stream().filter(m -> m.getName().equals("test")).map(m -> m.getValue()).findFirst().get();
-                    if (testStr.contains("Id != null")) {
-                        String joinDomian = testStr.replaceAll("Id != null", "");
-                        return String.format("%s != null and %s.id != null", joinDomian, joinDomian);
-                    } else {
-                        return null;
-                    }
-                }).collect(Collectors.toList());
+        List<String> newTestList = element.getElements().stream().filter(p -> p instanceof XmlElement && ((XmlElement) p).getName().equals("trim")).map(p -> (XmlElement) p).findFirst().get().getElements().stream().map(p -> (XmlElement) p).map(p -> {
+            String testStr = p.getAttributes().stream().filter(m -> m.getName().equals("test")).map(m -> m.getValue()).findFirst().get();
+            if (testStr.contains("Id != null")) {
+                String joinDomian = testStr.replaceAll("Id != null", "");
+                return String.format("%s != null and %s.id != null", joinDomian, joinDomian);
+            } else {
+                return null;
+            }
+        }).collect(Collectors.toList());
 
-        List<XmlElement> ss = element.getElements()
-                .stream()
-                .filter(p -> p instanceof XmlElement && ((XmlElement) p).getName().equals("trim"))
-                .map(p -> (XmlElement) p)
-                .collect(Collectors.toList());
+        List<XmlElement> ss = element.getElements().stream().filter(p -> p instanceof XmlElement && ((XmlElement) p).getName().equals("trim")).map(p -> (XmlElement) p).collect(Collectors.toList());
 
         for (int i = 0; i < newTestList.size(); i++) {
             if (StringUtil.isEmpty(newTestList.get(i))) {
@@ -439,27 +385,18 @@ public class DhlMybatisPlugin extends PluginAdapter {
     private void changeUpdateSelectiveElement(XmlElement element) {
 
         element.getAttributes().remove(1);
-        List<String> newTestList = element.getElements().stream()
-                .filter(p -> p instanceof XmlElement && ((XmlElement) p).getName().equals("set"))
-                .map(p -> (XmlElement) p)
-                .findFirst().get().getElements().stream()
-                .map(p -> (XmlElement) p)
-                .map(p -> {
-                    String testStr = p.getAttributes().stream().filter(m -> m.getName().equals("test")).map(m -> m.getValue()).findFirst().get();
-                    if (testStr.contains("Id != null")) {
-                        String joinDomian = testStr.replaceAll("Id != null", "");
-                        return String.format("%s != null and %s.id != null", joinDomian, joinDomian);
-                    } else {
-                        return null;
-                    }
-                }).collect(Collectors.toList());
+        List<String> newTestList = element.getElements().stream().filter(p -> p instanceof XmlElement && ((XmlElement) p).getName().equals("set")).map(p -> (XmlElement) p).findFirst().get().getElements().stream().map(p -> (XmlElement) p).map(p -> {
+            String testStr = p.getAttributes().stream().filter(m -> m.getName().equals("test")).map(m -> m.getValue()).findFirst().get();
+            if (testStr.contains("Id != null")) {
+                String joinDomian = testStr.replaceAll("Id != null", "");
+                return String.format("%s != null and %s.id != null", joinDomian, joinDomian);
+            } else {
+                return null;
+            }
+        }).collect(Collectors.toList());
 
 
-        XmlElement ss = element.getElements()
-                .stream()
-                .filter(p -> p instanceof XmlElement && ((XmlElement) p).getName().equals("set"))
-                .map(p -> (XmlElement) p)
-                .findFirst().get();
+        XmlElement ss = element.getElements().stream().filter(p -> p instanceof XmlElement && ((XmlElement) p).getName().equals("set")).map(p -> (XmlElement) p).findFirst().get();
 
         List<VisitableElement> elements = ss.getElements();
         for (int i = 0; i < newTestList.size(); i++) {
@@ -535,12 +472,18 @@ public class DhlMybatisPlugin extends PluginAdapter {
 
     }
 
-    private void addSelectionCommonSql(Document document, String domainPackage) {
+    private void addSelectionCommonSql(Document document, String domainPackage, IntrospectedTable introspectedTable) {
+
+        introspectedTable.getTableConfiguration().getDomainObjectName();
+        String sqlStatement = introspectedTable.getGeneratedKey().getRuntimeSqlStatement();
 
         XmlElement selectEle = document.getRootElement().getElements().stream().map(p -> (XmlElement) p).filter(p -> p.getName().equals("select")).findFirst().get();
 
-        TextElement topOneText = new TextElement("select  <if test='selectOne'>top 1</if>");
-        selectEle.getElements().set(0, topOneText);
+        if (sqlStatement.equalsIgnoreCase("SELECT SCOPE_IDENTITY()")) {
+            TextElement topOneText = new TextElement("select  <if test='selectOne'>top 1</if>");
+            selectEle.getElements().set(0, topOneText);
+        }
+
 
         XmlElement sqlElement = new XmlElement("sql");
         sqlElement.addAttribute(new Attribute("id", "select_sql"));
@@ -556,6 +499,10 @@ public class DhlMybatisPlugin extends PluginAdapter {
         //添加orderCondition
         sqlElement.addElement(getOrderSql());
 
+
+        if (sqlStatement.equalsIgnoreCase("SELECT LAST_INSERT_ID()")) {
+            sqlElement.addElement(new TextElement("<if test='selectOne'>limit 1</if>"));
+        }
 
         document.getRootElement().getElements().add(2, sqlElement);
 
@@ -632,7 +579,7 @@ public class DhlMybatisPlugin extends PluginAdapter {
         return ifElement;
     }
 
-    private void addSelectPageQuery(Document document, String domainPackage) throws ClassNotFoundException {
+    private void addSelectPageQuery(Document document, String domainPackage, IntrospectedTable introspectedTable) throws ClassNotFoundException {
         String domainSimpleName = getSimpleDomainName(domainPackage);
         domainSimpleName = StringUtil.toUnderlineCase(domainSimpleName);
 
@@ -646,7 +593,15 @@ public class DhlMybatisPlugin extends PluginAdapter {
         selectElement.addElement(new TextElement("where 1 = 1 "));
         selectElement.addElement(getWhereSql());
         selectElement.addElement(getOrderSql());
-        selectElement.addElement(new TextElement("offset ${startIndex} rows fetch next ${length} rows only)"));
+
+        introspectedTable.getTableConfiguration().getDomainObjectName();
+        String sqlStatement = introspectedTable.getGeneratedKey().getRuntimeSqlStatement();
+        if (sqlStatement.equalsIgnoreCase("SELECT LAST_INSERT_ID()")) {
+            selectElement.addElement(new TextElement("limit ${startIndex} , ${length})"));
+        } else if (sqlStatement.equalsIgnoreCase("SELECT SCOPE_IDENTITY()")) {
+            selectElement.addElement(new TextElement("offset ${startIndex} rows fetch next ${length} rows only)"));
+        }
+
 
         selectElement.addElement(new TextElement("select <include refid=\"Base_Column_List\" />"));
         selectElement.addElement(new TextElement("from t_" + domainSimpleName + " " + domainSimpleName));
@@ -670,11 +625,7 @@ public class DhlMybatisPlugin extends PluginAdapter {
     }
 
     private void addSelectCount(Document document) {
-        XmlElement selectEle = document.getRootElement().getElements().stream()
-                .map(p -> (XmlElement) p)
-                .filter(p -> p.getName().equals("sql"))
-                .filter(p -> p.getAttributes().get(0).getValue().equalsIgnoreCase("select_sql"))
-                .findFirst().get();
+        XmlElement selectEle = document.getRootElement().getElements().stream().map(p -> (XmlElement) p).filter(p -> p.getName().equals("sql")).filter(p -> p.getAttributes().get(0).getValue().equalsIgnoreCase("select_sql")).findFirst().get();
 
         XmlElement selectElement = new XmlElement("select");
         selectElement.addAttribute(new Attribute("id", "selectCount"));
@@ -720,49 +671,42 @@ public class DhlMybatisPlugin extends PluginAdapter {
     private void insertManyToMany(Document document, String domainPackage) {
         try {
             Class domainClass = ClassLoader.getSystemClassLoader().loadClass(domainPackage);
-            Arrays.stream(domainClass.getDeclaredFields())
-                    .filter(q -> q.getAnnotation(ManyToMany.class) != null)
-                    .map(q -> {
-                        String tableName = q.getDeclaredAnnotation(JoinTable.class).name();
-                        Class joinDomainClass = ((Class) (((ParameterizedType) (q.getGenericType())).getActualTypeArguments()[0]));
-                        String joinDomainSimpleName = getSimpleDomainName(joinDomainClass.getSimpleName());
-                        String joinDomainName = StringUtil.toUnderlineCase(joinDomainSimpleName);
-                        String joinFieldName = StringUtil.upperFirst(q.getName());
-                        String domainSimpleName = getSimpleDomainName(domainPackage);
-                        String domainName = StringUtil.toUnderlineCase(domainSimpleName);
-                        String joinId = Arrays.stream(q.getDeclaredAnnotation(JoinTable.class).joinColumns()).map(p -> p.name()).findFirst().get();
-                        String invertJoinId = Arrays.stream(q.getDeclaredAnnotation(JoinTable.class).inverseJoinColumns()).map(p -> p.name()).findFirst().get();
-                        String domainIdName = StringUtil.toCamelCase(joinId);
-                        String joinDomainIdName = StringUtil.toCamelCase(invertJoinId);
-                        XmlElement insertElement = new XmlElement("insert");
-                        insertElement.addAttribute(new Attribute("id", "insert" + domainClass.getSimpleName() + joinFieldName));
-                        TextElement textElement1 = new TextElement(String.format("insert into %s(%s,%s) values(#{%s},#{%s})",
-                                tableName, joinId, invertJoinId, domainIdName, joinDomainIdName));
+            Arrays.stream(domainClass.getDeclaredFields()).filter(q -> q.getAnnotation(ManyToMany.class) != null).map(q -> {
+                String tableName = q.getDeclaredAnnotation(JoinTable.class).name();
+                Class joinDomainClass = ((Class) (((ParameterizedType) (q.getGenericType())).getActualTypeArguments()[0]));
+                String joinDomainSimpleName = getSimpleDomainName(joinDomainClass.getSimpleName());
+                String joinDomainName = StringUtil.toUnderlineCase(joinDomainSimpleName);
+                String joinFieldName = StringUtil.upperFirst(q.getName());
+                String domainSimpleName = getSimpleDomainName(domainPackage);
+                String domainName = StringUtil.toUnderlineCase(domainSimpleName);
+                String joinId = Arrays.stream(q.getDeclaredAnnotation(JoinTable.class).joinColumns()).map(p -> p.name()).findFirst().get();
+                String invertJoinId = Arrays.stream(q.getDeclaredAnnotation(JoinTable.class).inverseJoinColumns()).map(p -> p.name()).findFirst().get();
+                String domainIdName = StringUtil.toCamelCase(joinId);
+                String joinDomainIdName = StringUtil.toCamelCase(invertJoinId);
+                XmlElement insertElement = new XmlElement("insert");
+                insertElement.addAttribute(new Attribute("id", "insert" + domainClass.getSimpleName() + joinFieldName));
+                TextElement textElement1 = new TextElement(String.format("insert into %s(%s,%s) values(#{%s},#{%s})", tableName, joinId, invertJoinId, domainIdName, joinDomainIdName));
 
-                        XmlElement deleteElement = new XmlElement("delete");
-                        deleteElement.addAttribute(new Attribute("id", "delete" + domainClass.getSimpleName() + joinFieldName));
-                        TextElement textElement = new TextElement(String.format("delete from %s where %s=#{%s} and %s=#{%s};",
-                                tableName, joinId, domainIdName, invertJoinId, joinDomainIdName));
+                XmlElement deleteElement = new XmlElement("delete");
+                deleteElement.addAttribute(new Attribute("id", "delete" + domainClass.getSimpleName() + joinFieldName));
+                TextElement textElement = new TextElement(String.format("delete from %s where %s=#{%s} and %s=#{%s};", tableName, joinId, domainIdName, invertJoinId, joinDomainIdName));
 
 
-                        XmlElement deleteMiddleElement = new XmlElement("delete");
-                        deleteMiddleElement.addAttribute(new Attribute("id", "delete" + domainClass.getSimpleName() + joinFieldName + "Middle"));
-                        TextElement textElement2 = new TextElement(String.format("delete from %s where %s=#{%s}", tableName, joinId, domainIdName));
+                XmlElement deleteMiddleElement = new XmlElement("delete");
+                deleteMiddleElement.addAttribute(new Attribute("id", "delete" + domainClass.getSimpleName() + joinFieldName + "Middle"));
+                TextElement textElement2 = new TextElement(String.format("delete from %s where %s=#{%s}", tableName, joinId, domainIdName));
 
-                        deleteElement.addElement(textElement);
-                        insertElement.addElement(textElement1);
-                        deleteMiddleElement.addElement(textElement2);
-                        List<XmlElement> elementList = new LinkedList<>();
-                        elementList.add(insertElement);
-                        elementList.add(deleteElement);
-                        elementList.add(deleteMiddleElement);
-                        return elementList;
-                    })
-                    .filter(ObjectUtil::notNull)
-                    .flatMap(List::stream)
-                    .forEach(p -> {
-                        document.getRootElement().getElements().add(p);
-                    });
+                deleteElement.addElement(textElement);
+                insertElement.addElement(textElement1);
+                deleteMiddleElement.addElement(textElement2);
+                List<XmlElement> elementList = new LinkedList<>();
+                elementList.add(insertElement);
+                elementList.add(deleteElement);
+                elementList.add(deleteMiddleElement);
+                return elementList;
+            }).filter(ObjectUtil::notNull).flatMap(List::stream).forEach(p -> {
+                document.getRootElement().getElements().add(p);
+            });
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }

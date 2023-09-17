@@ -237,7 +237,7 @@ public class ExcelUtil {
                 MultipartFile file = fileEntry.getValue();
                 InputStream in = file.getInputStream();
                 ExcelReader reader = cn.hutool.poi.excel.ExcelUtil.getReader(in);
-                checkExcelField(reader, beanType);
+//                checkExcelField(reader, beanType);
                 return readData(reader, beanType);
             }
         }
